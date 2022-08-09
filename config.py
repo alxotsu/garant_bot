@@ -15,7 +15,7 @@ QIWI_TOKEN = environ["QIWI_TOKEN"]
 REPLENISH = (
     "⚠️ Пополнение баланса\n\n"
     "🥝 Qiwi \n\n"
-    "👉 Номер(Qiwi) - <b><code>+номер</code>\n"
+    f"👉 Номер(Qiwi) - <b><code>{QIWI_ID}</code>\n"
     "👉 Коментарий - <code>{code}</code></b>\n"
     "👉 До 15 000 рублей!"
 )

@@ -1,6 +1,5 @@
 from telebot import types
 
-# Меню
 menu = types.ReplyKeyboardMarkup(resize_keyboard=True)
 menu.add(
     types.KeyboardButton("💵 Прошедшие сделки"),
@@ -122,8 +121,6 @@ choise_canel_customer.add(
     types.InlineKeyboardButton("✅ Согласиться", callback_data="Yes_canel_customer"),
     types.InlineKeyboardButton("❌ Отказаться", callback_data="No_canel_customer"),
 )
-
-onee = "1313716271:"
 
 ok_choise = types.InlineKeyboardMarkup()
 ok_choise.add(
