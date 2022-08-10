@@ -1,6 +1,5 @@
 import sqlite3
-import telebot
-from config import QIWI_TOKEN, REPLENISH, QIWI_ID, DATABASE, BOT_TOKEN
+from config import QIWI_TOKEN, REPLENISH, QIWI_ID, DATABASE
 import random
 import requests
 
@@ -10,12 +9,30 @@ def first_join(user_id, username):
     q = connection.cursor()
     q = q.execute(f"SELECT * FROM users WHERE user_id = '{user_id}'")
     row = q.fetchone()
-    connection.close()
     if row is None:
         q.execute(
             f"INSERT INTO users (user_id, offers, balance, qiwi, ban, nick) VALUES ('{user_id}', '0', '0', 'Не указан', '0', '{username}')"
         )
         connection.commit()
+    connection.close()
+
+
+def check_user_blocks(user_id):
+    connection = sqlite3.connect(DATABASE)
+    q = connection.cursor()
+    q = q.execute(f"SELECT ban FROM users WHERE user_id = '{user_id}'")
+    row = q.fetchone()
+    if row[0] == '1':
+        connection.close()
+        return "⛔️ К сожалению, Вы получили блокировку!"
+    q = connection.cursor()
+    row = q.execute(
+        f"SELECT * FROM temp_deal WHERE user_id = '{user_id}' OR user_id2 = '{user_id}'"
+    ).fetchone()
+    connection.close()
+    if row:
+        return "⛔️ Вы не можете взаимодействовать с ботом, пока не завершите сделку!"
+
 
 
 def check_ban(user_id):

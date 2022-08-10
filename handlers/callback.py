@@ -1,127 +1,308 @@
-from telebot import types
-import telebot
-
-from config import (
-    BOT_TOKEN,
-    ADMIN_FIRST_CHAT_ID,
-    ADMIN_USERNAME,
-    PERCENT,
-    ADMIN_SECOND_CHAT_ID,
-    INSTRUCTION,
-    BOT_CHAT_LINK,
-)
-import var
 import functions
 import keyboards
-import time
+import var
+from bot import bot
 
-balance_dict = {}
-bot = telebot.TeleBot(BOT_TOKEN)
-bot_username = bot.get_me().username
-
-
-@bot.message_handler(commands=["start"])
-def start(message: types.Message):
-    chat_id = message.chat.id
-    username = message.from_user.username
-    if message.from_user.username is None:
-        bot.send_message(
-            chat_id, "⛔️ Вам необходимо установить логин для работы с ботом!"
-        )
-    else:
-        functions.first_join(user_id=chat_id, username=username)
-        bot.send_message(
-            chat_id,
-            "✅ Добро пожаловать, {}!".format(message.from_user.first_name),
-            reply_markup=keyboards.menu,
-        )
+__all__ = ["register_bot_callback_handler"]
 
 
-@bot.message_handler(commands=["admin"])
-def start(message: types.Message):
-    if (
-            message.chat.id == ADMIN_FIRST_CHAT_ID
-            or message.chat.id == ADMIN_SECOND_CHAT_ID
-    ):
-        bot.send_message(
-            message.chat.id,
-            "✅ {}, вы авторизованы!".format(message.from_user.first_name),
-            reply_markup=keyboards.admin,
-        )
+def register_bot_callback_handler(data: str):
+    def wrapper(handler: callable):
+        bot.register_callback_query_handler(handler, lambda call: call.data == data)
+        return handler
+
+    return wrapper
 
 
-# Команды
-@bot.message_handler(content_types=["text"])
-def send_text(message):
-    chat_id = message.chat.id
-    username = message.from_user.username
-    try:
-        info = functions.check_user_blocks(chat_id)
-        if info:
-            bot.send_message(chat_id, info)
-            return
-
-        if message.text.lower() == "👤 профиль":
-            info = functions.profile(user_id=chat_id)
-            bot.send_message(
-                chat_id,
-                "🧾 Профиль:\n\n❕ Ваш id - <b><code>{id}</code></b>\n❕ Проведенных сделок - {offers}\n\n💰 Ваш баланс - {balance} рублей\n💳 Ваш Qiwi - {qiwi}".format(
-                    id=info[0], offers=info[1], balance=info[2], qiwi=info[3]
-                ),
-                reply_markup=keyboards.profile,
-                parse_mode="HTML",
-            )
-
-        elif message.text.lower() == "🔒 провести сделку":
-            msg = bot.send_message(
-                chat_id, "В этой сделке вы...", reply_markup=keyboards.choise_offer
-            )
-
-        elif message.text.lower() == "⭐️ о нас":
-            bot.send_message(
-                chat_id,
-                "По всем вопросам: @"
-                + ADMIN_USERNAME
-                + "\nНаш чат: "
-                + BOT_CHAT_LINK
-                + "\nИнструкция по использованию: "
-                + INSTRUCTION,
-            )
-
-        elif message.text.lower() == "💵 прошедшие сделки":
-            bot.send_message(
-                chat_id,
-                "Вывести ваши последние сделки где вы...",
-                reply_markup=keyboards.cors,
-            )
-    except Exception as e:
-        print(e)
-        bot.send_message(chat_id, "Попробуйте заново")
-        functions.first_join(user_id=chat_id, username=username)
-
-
-@bot.callback_query_handler(func=lambda call: True)
-def handler_call(call):
+@register_bot_callback_handler("output")
+def callback_handler(call):
     chat_id = call.message.chat.id
     message_id = call.message.message_id
-    if call.data == "output":
-        info = functions.profile(user_id=chat_id)
-        if info[3] == "Не указан":
-            bot.edit_message_text(
-                chat_id=chat_id,
-                message_id=message_id,
-                text="⛔️ У Вас не указан кошелёк для вывода(Qiwi)!",
-                reply_markup=keyboards.qiwi,
+    info = functions.profile(user_id=chat_id)
+    if info[3] == "Не указан":
+        bot.edit_message_text(
+            chat_id=chat_id,
+            message_id=message_id,
+            text="⛔️ У Вас не указан кошелёк для вывода(Qiwi)!",
+            reply_markup=keyboards.qiwi,
+        )
+    else:
+        msg = bot.edit_message_text(
+            chat_id=chat_id,
+            message_id=message_id,
+            text="Ваш Qiwi - {qiwi}\nБаланс - {balance} рублей\n\nВведите сумму для вывода. (Для отмены введите любую букву)".format(
+                qiwi=info[3], balance=info[2]
+            ),
+        )
+        bot.register_next_step_handler(msg, output)
+
+
+@register_bot_callback_handler("qiwi_num")
+def callback_handler(call):
+    chat_id = call.message.chat.id
+
+
+@register_bot_callback_handler("seller")
+def callback_handler(call):
+    chat_id = call.message.chat.id
+
+
+@register_bot_callback_handler("customer")
+def callback_handler(call):
+    chat_id = call.message.chat.id
+
+
+@register_bot_callback_handler("menu")
+def callback_handler(call):
+    chat_id = call.message.chat.id
+
+
+@register_bot_callback_handler("bor")
+def callback_handler(call):
+    chat_id = call.message.chat.id
+
+
+@register_bot_callback_handler("unban")
+def callback_handler(call):
+    chat_id = call.message.chat.id
+
+
+@register_bot_callback_handler("ban")
+def callback_handler(call):
+    chat_id = call.message.chat.id
+
+
+@register_bot_callback_handler("edit_balance")
+def callback_handler(call):
+    chat_id = call.message.chat.id
+
+
+@register_bot_callback_handler("input")
+def callback_handler(call):
+    chat_id = call.message.chat.id
+
+
+@register_bot_callback_handler("check_payment")
+def callback_handler(call):
+    chat_id = call.message.chat.id
+
+
+@register_bot_callback_handler("cancel_payment")
+def callback_handler(call):
+    chat_id = call.message.chat.id
+
+
+@register_bot_callback_handler("message")
+def callback_handler(call):
+    chat_id = call.message.chat.id
+
+
+@register_bot_callback_handler("seller_offer")
+def callback_handler(call):
+    chat_id = call.message.chat.id
+
+
+@register_bot_callback_handler("customer_offer")
+def callback_handler(call):
+    chat_id = call.message.chat.id
+
+
+@register_bot_callback_handler("proposal_customer")
+def callback_handler(call):
+    chat_id = call.message.chat.id
+
+
+@register_bot_callback_handler("proposal_seller")
+def callback_handler(call):
+    chat_id = call.message.chat.id
+
+
+@register_bot_callback_handler("delete_customer")
+def callback_handler(call):
+    chat_id = call.message.chat.id
+
+
+@register_bot_callback_handler("delete_seller")
+def callback_handler(call):
+    chat_id = call.message.chat.id
+
+
+@register_bot_callback_handler("statistics")
+def callback_handler(call):
+    chat_id = call.message.chat.id
+
+
+@register_bot_callback_handler("accept_customer")
+def callback_handler(call):
+    chat_id = call.message.chat.id
+
+
+@register_bot_callback_handler("accept_seller")
+def callback_handler(call):
+    chat_id = call.message.chat.id
+
+
+@register_bot_callback_handler("input_panel")
+def callback_handler(call):
+    chat_id = call.message.chat.id
+
+
+@register_bot_callback_handler("price")
+def callback_handler(call):
+    chat_id = call.message.chat.id
+
+
+@register_bot_callback_handler("cancel_open")
+def callback_handler(call):
+    chat_id = call.message.chat.id
+
+
+@register_bot_callback_handler("No_cancel")
+def callback_handler(call):
+    chat_id = call.message.chat.id
+
+
+@register_bot_callback_handler("Yes_cancel")
+def callback_handler(call):
+    chat_id = call.message.chat.id
+
+
+@register_bot_callback_handler("Yes_cancel_seller")
+def callback_handler(call):
+    chat_id = call.message.chat.id
+
+
+@register_bot_callback_handler("cancel_open_seller")
+def callback_handler(call):
+    chat_id = call.message.chat.id
+
+
+@register_bot_callback_handler("Yes_cancel_seller1")
+def callback_handler(call):
+    chat_id = call.message.chat.id
+
+
+@register_bot_callback_handler("No_cancel_seller1")
+def callback_handler(call):
+    chat_id = call.message.chat.id
+
+
+@register_bot_callback_handler("No_cancel_seller")
+def callback_handler(call):
+    chat_id = call.message.chat.id
+
+
+@register_bot_callback_handler("Yes_cancel_customer")
+def callback_handler(call):
+    chat_id = call.message.chat.id
+
+
+@register_bot_callback_handler("No_cancel_customer")
+def callback_handler(call):
+    chat_id = call.message.chat.id
+
+
+@register_bot_callback_handler("ok")
+def callback_handler(call):
+    chat_id = call.message.chat.id
+
+
+@register_bot_callback_handler("ok_cancel")
+def callback_handler(call):
+    chat_id = call.message.chat.id
+
+
+@register_bot_callback_handler("ok_ok")
+def callback_handler(call):
+    chat_id = call.message.chat.id
+
+
+@register_bot_callback_handler("open_dispute")
+def callback_handler(call):
+    chat_id = call.message.chat.id
+
+
+@register_bot_callback_handler("open_dispute_seller")
+def callback_handler(call):
+    chat_id = call.message.chat.id
+
+
+@register_bot_callback_handler("dispute_admin")
+def callback_handler(call):
+    chat_id = call.message.chat.id
+
+
+@register_bot_callback_handler("customer_true")
+def callback_handler(call):
+    chat_id = call.message.chat.id
+
+
+@register_bot_callback_handler("seller_true")
+def callback_handler(call):
+    chat_id = call.message.chat.id
+
+
+@register_bot_callback_handler("no_true")
+def callback_handler(call):
+    chat_id = call.message.chat.id
+
+
+@register_bot_callback_handler("cancel_open_offer")
+def callback_handler(call):
+    chat_id = call.message.chat.id
+
+
+@register_bot_callback_handler("cancel_open_offer_seller")
+def callback_handler(call):
+    chat_id = call.message.chat.id
+
+
+@register_bot_callback_handler("reviews")
+def callback_handler(call):
+    chat_id = call.message.chat.id
+
+
+@register_bot_callback_handler("add_review")
+def callback_handler(call):
+    chat_id = call.message.chat.id
+
+
+@register_bot_callback_handler("up_login")
+def callback_handler(call):
+    chat_id = call.message.chat.id
+
+
+@register_bot_callback_handler("no_review")
+def callback_handler(call):
+    chat_id = call.message.chat.id
+
+
+@register_bot_callback_handler("cancel_wait")
+def callback_handler(call):
+    chat_id = call.message.chat.id
+    try:
+        info = functions.info_offers_seller(chat_id)
+        if info[4] == "review":
+            functions.close_offer_seller(chat_id)
+            bot.send_message(
+                chat_id,
+                text="❄️ Ожидание отменено, покупатель не может больше оставить отзыв.",
+                reply_markup=keyboards.menu,
+            )
+            bot.send_message(
+                info[1],
+                "Продавец не захотел ожидать отзыва. Сделка заверешна",
+                reply_markup=keyboards.menu,
             )
         else:
-            msg = bot.edit_message_text(
-                chat_id=chat_id,
-                message_id=message_id,
-                text="Ваш Qiwi - {qiwi}\nБаланс - {balance} рублей\n\nВведите сумму для вывода. (Для отмены введите любую букву)".format(
-                    qiwi=info[3], balance=info[2]
-                ),
-            )
-            bot.register_next_step_handler(msg, output)
+            bot.send_message(chat_id, var.ERROR)
+    except:
+        bot.answer_callback_query(
+            callback_query_id=call.id, show_alert=True, text=var.ERROR
+        )
+
+####################################
+
 
     elif call.data == "qiwi_num":
         msg = bot.edit_message_text(
@@ -922,391 +1103,6 @@ def handler_call(call):
         except:
             bot.send_message(chat_id, text=var.ERROR)
 
-    elif call.data == "cancel_wait":
-        try:
-            info = functions.info_offers_seller(chat_id)
-            if info[4] == "review":
-                functions.close_offer_seller(chat_id)
-                bot.send_message(
-                    chat_id,
-                    text="❄️ Ожидание отменено, покупатель не может больше оставить отзыв.",
-                    reply_markup=keyboards.menu,
-                )
-                bot.send_message(
-                    info[1],
-                    "Продавец не захотел ожидать отзыва. Сделка заверешна",
-                    reply_markup=keyboards.menu,
-                )
-            else:
-                bot.send_message(chat_id, var.ERROR)
-        except:
-            bot.answer_callback_query(
-                callback_query_id=call.id, show_alert=True, text=var.ERROR
-            )
 
 
-def add_review(message):
-    try:
-        if message.text.startswith("-"):
-            info = functions.info_offers_customer(message.chat.id)
-            bot.send_message(
-                message.chat.id, text=var.CANCEL_OPERATION, reply_markup=keyboards.menu
-            )
-            functions.close_offer(message.chat.id)
-        else:
-            info = functions.info_offers_customer(message.chat.id)
-            functions.add_review(info[0], info[2], message.chat.id, message.text)
-            bot.send_message(
-                message.chat.id, text="📝 Отзыв успешно оставлен.", reply_markup=keyboards.menu
-            )
-            bot.send_message(
-                info[0],
-                text="📝 О вас оставили отзыв!\n\n" + message.text,
-                reply_markup=keyboards.menu,
-            )
-            functions.close_offer(message.chat.id)
-    except:
-        bot.answer_callback_query(
-            callback_query_id=call.id, show_alert=True, text=var.ERROR
-        )
 
-
-def customer_true_func(message):
-    try:
-        if message.text.startswith("-"):
-            bot.send_message(message.chat.id, text=var.CANCEL_OPERATION)
-        else:
-            if message.text.isdigit():
-                info = functions.dispute_info(message.text)
-                info1 = functions.profile(info[1])
-                functions.customer_true(message.text, info[1], info1[2], info[2])
-                bot.send_message(message.chat.id, text="✅ Вердикт успешно вынесен.")
-                bot.send_message(
-                    info[1],
-                    text="✅ Вердикт был вынесен в вашу пользу!",
-                    reply_markup=keyboards.menu,
-                )
-                bot.send_message(
-                    info[0],
-                    text="✅ Вердикт был вынесен в пользу покупателя!",
-                    reply_markup=keyboards.menu,
-                )
-            else:
-                bot.send_message(message.chat.id, text="⛔️ Вы ввели ID сделки буквами!")
-    except:
-        bot.send_message(message.chat.id, text=var.ERROR)
-
-
-def seller_true_functions(message):
-    try:
-        if message.text.startswith("-"):
-            bot.send_message(message.chat.id, text=var.CANCEL_OPERATION)
-        else:
-            if message.text.isdigit():
-                info = functions.dispute_info(message.text)
-                info_s = functions.profile(info[0])
-                info_c = functions.profile(info[1])
-                functions.seller_true(
-                    message.text, info[0], info[1], info_s[2], info_c[2], info[2]
-                )
-                bot.send_message(message.chat.id, text="✅ Вердикт успешно вынесен.")
-                bot.send_message(
-                    info[1],
-                    text="✅ Вердикт был вынесен в пользу продавца!",
-                    reply_markup=keyboards.menu,
-                )
-                bot.send_message(
-                    info[0],
-                    text="✅ Вердикт был вынесен в вашу пользу!",
-                    reply_markup=keyboards.menu,
-                )
-            else:
-                bot.send_message(message.chat.id, text="⛔️ Вы ввели ID сделки буквами!")
-    except:
-        bot.send_message(message.chat.id, text=var.ERROR)
-
-
-def dispute_admin_func(message):
-    try:
-        if message.text.startswith("-"):
-            bot.send_message(message.chat.id, text=var.CANCEL_OPERATION)
-        else:
-            if message.text.isdigit():
-                info = functions.dispute_info(message.text)
-                if info == None:
-                    bot.send_message(message.chat.id, text="⛔️ Сделка не обнаружена!")
-                else:
-                    info_s = functions.profile(info[0])
-                    info_c = functions.profile(info[1])
-                    bot.send_message(
-                        message.chat.id,
-                        text="🧾 Информация о сделке №{id}\n\n❕ Покупатель - ID{customer}(@{customer_nick})\n❕ Продавец - ID{seller}(@{seller_nick})\n💰 Сумма сделки - {sum_offer} рублей\n📊 Статус сделки - {status}\n\nКто прав в данном споре?".format(
-                            id=info[3],
-                            customer=info[1],
-                            seller=info[0],
-                            status=info[4],
-                            sum_offer=info[2],
-                            customer_nick=info_c[5],
-                            seller_nick=info_s[5],
-                        ),
-                        reply_markup=keyboards.choise_admin,
-                    )
-            else:
-                bot.send_message(message.chat.id, text="⛔️ Вы ввели ID сделки буквами!")
-    except:
-        bot.send_message(message.chat.id, text=var.ERROR)
-
-
-def write_qiwi1(message):
-    try:
-        chat_id = message.chat.id
-        if (
-                message.text.startswith("+7")
-                or message.text.startswith("+3")
-                or message.text.startswith("+9")
-        ):
-            functions.write_qiwi(chat_id, message.text)
-            bot.send_message(chat_id, text="✅ Qiwi установлен")
-        else:
-            bot.send_message(chat_id, text="⛔️ Неправильный формат!")
-    except:
-        bot.send_message(chat_id, text=var.ERROR)
-
-
-def ban1(message):
-    ban = message.text
-    try:
-        int(ban)
-        functions.ban(ban)
-        bot.send_message(message.chat.id, text="✅ Человек успешно забанен!")
-    except:
-        bot.send_message(message.chat.id, text=var.CANCEL_OPERATION)
-
-
-def unban1(message):
-    try:
-        unban = message.text
-        int(unban)
-        functions.unban(unban)
-        bot.send_message(message.chat.id, text="✅ Человек успешно разбанен!")
-    except:
-        bot.send_message(message.chat.id, text=var.CANCEL_OPERATION)
-
-
-def give_balance1(message):
-    balance = functions.GiveBalance(message.text)
-    balance_dict[message.chat.id] = balance
-    msg = bot.send_message(
-        message.chat.id,
-        text="Введите сумму, на которую хотите изменить баланс. (Для отмены введите любую букву)",
-    )
-    bot.register_next_step_handler(msg, give_balance2)
-
-
-def give_balance2(message):
-    balance = balance_dict[message.chat.id]
-    balance.balance = message.text
-    balance = balance_dict[message.chat.id]
-    functions.edit_balance(balance)
-    bot.send_message(message.chat.id, text="✅ Баланс успешно отредактирован")
-
-
-def search_seller(message):
-    try:
-        if message.text.startswith("-"):
-            bot.send_message(message.chat.id, text=var.CANCEL_OPERATION)
-        else:
-            info1 = functions.profile(message.chat.id)
-            if (
-                    str(message.text) == message.from_user.username
-                    or info1[5] != message.from_user.username
-            ):
-                bot.send_message(
-                    message.chat.id,
-                    text="⛔️ С самим собой провести сделку невозможно, или вы изменили ник. Если это так, то Вам необходимо его обновить в профиле.",
-                )
-            else:
-                info = functions.search(message.text)
-                if info == None:
-                    bot.send_message(
-                        message.chat.id,
-                        text="⛔️ Пользователь не найден, пожалуйста, убедитесь что он уже взаимодействовал с ботом!",
-                    )
-                else:
-                    info1 = functions.check_deal(message.text)
-                    if info1 == None:
-                        functions.deal(message.chat.id, info[0])
-                        bot.send_message(
-                            message.chat.id,
-                            "🧾 Профиль:\n\n❕ Id - <b><code>{id}</code></b>\n❕ Логин - @{nickname}\n❕ Проведенных сделок - {offers}\n\n🔥 В этой сделке вы будете продавцом!".format(
-                                id=info[0], nickname=info[5], offers=info[1]
-                            ),
-                            reply_markup=keyboards.sentence_seller,
-                            parse_mode="HTML",
-                        )
-                        bot.send_message(
-                            message.chat.id,
-                            text=var.DISABLE_KEYBOARD,
-                            reply_markup=types.ReplyKeyboardRemove(),
-                        )
-                    else:
-                        bot.send_message(
-                            message.chat.id,
-                            text="⛔️ Человек сейчас проводит сделку, и не может начать одновременно вторую.",
-                        )
-                        bot.send_message(
-                            info[0],
-                            "⛔️ С вами пытались провести сделку, однако система её отклонила, ведь вы проводите другую в настоящий момент!",
-                        )
-    except:
-        bot.send_message(message.chat.id, text=var.ERROR)
-
-
-def search_customer(message):
-    try:
-        if message.text.startswith("-"):
-            bot.send_message(message.chat.id, text=var.CANCEL_OPERATION)
-        else:
-            info1 = functions.profile(message.chat.id)
-            if (
-                    str(message.text) == message.from_user.username
-                    or info1[5] != message.from_user.username
-            ):
-                bot.send_message(
-                    message.chat.id,
-                    text="⛔️ С самим собой провести сделку невозможно, или вы изменили ник. Если это так, то Вам необходимо его обновить в профиле.",
-                )
-            else:
-                info = functions.search(message.text)
-                if info == None:
-                    bot.send_message(
-                        message.chat.id,
-                        text="⛔️ Пользователь не найден, пожалуйста, убедитесь что он уже взаимодействовал с ботом!",
-                    )
-                else:
-                    result = functions.check_deal(message.text)
-                    if result == None:
-                        functions.deal(info[0], message.chat.id)
-                        bot.send_message(
-                            message.chat.id,
-                            "🧾 Профиль:\n\n❕ Id - <b><code>{id}</code></b>\n❕ Логин - @{nickname}\n❕ Проведенных сделок - {offers}\n\n🔥В этой сделке вы будете покупателем!".format(
-                                id=info[0], nickname=info[5], offers=info[1]
-                            ),
-                            reply_markup=keyboards.sentence,
-                            parse_mode="HTML",
-                        )
-                        bot.send_message(
-                            message.chat.id,
-                            text=var.DISABLE_KEYBOARD,
-                            reply_markup=types.ReplyKeyboardRemove(),
-                        )
-                    else:
-                        bot.send_message(
-                            message.chat.id,
-                            text="⛔️ Человек сейчас проводит сделку, и не может начать одновременно вторую.",
-                        )
-                        bot.send_message(
-                            info[0],
-                            "⛔️ С вами пытались провести сделку, однако система её отклонила, ведь вы проводите другую в настоящий момент!",
-                        )
-    except:
-        bot.send_message(message.chat.id, text=var.ERROR)
-
-
-def output(message):
-    try:
-        info = functions.profile(user_id=message.chat.id)
-        money = message.text
-        balance = info[2]
-        if message.text.startswith("-"):
-            bot.send_message(message.chat.id, text="⛔️ Не в мою смену...")
-        else:
-            if float(money) > float(balance):
-                bot.send_message(
-                    message.chat.id,
-                    text="⛔️ На балансе недостаточно средств для вывода!",
-                )
-            else:
-                if float(money) < 10:
-                    bot.send_message(
-                        message.chat.id,
-                        text="⛔️ Минимальная сумма для вывода 10 рублей",
-                    )
-                else:
-                    commission = float(money) * float(PERCENT) / int(100)
-                    result = float(money) - float(commission)
-                    functions.output_qiwi(message.chat.id, balance, money)
-                    bot.send_message(
-                        message.chat.id, text="✅ Запрос на вывод успешно отправлен!"
-                    )
-                    bot.send_message(
-                        ADMIN_FIRST_CHAT_ID,
-                        text="✅ Отправлен запрос на вывод!\nQiwi - <b><code>{qiwi}</code></b>\nСумма - <b><code>{money}</code></b> рублей".format(
-                            qiwi=info[3], money=result
-                        ),
-                        parse_mode="HTML",
-                    )
-    except:
-        bot.send_message(message.chat.id, text=var.ERROR)
-
-
-def message1(message):
-    text = message.text
-    if message.text.startswith("-"):
-        bot.send_message(message.chat.id, text=var.CANCEL_OPERATION)
-    else:
-        info = functions.admin_message(text)
-        bot.send_message(message.chat.id, text="✅ Рассылка начата!")
-        for i in range(len(info)):
-            try:
-                time.sleep(1)
-                bot.send_message(info[i][0], str(text))
-            except:
-                pass
-        bot.send_message(message.chat.id, text="✅ Рассылка завершена!")
-
-
-def price(message):
-    money = message.text
-    info = functions.info_offers_seller(message.chat.id)
-    try:
-        if message.text.startswith("-"):
-            bot.send_message(message.chat.id, text=var.CANCEL_OPERATION)
-        else:
-            info_c = functions.profile(info[1])
-            info_s = functions.profile(info[0])
-            int(money)
-            status = info[4]
-            functions.edit_price(money, message.chat.id)
-            info = functions.info_offers_seller(message.chat.id)
-            bot.send_message(
-                message.chat.id,
-                text="💥 Сумма сделки успешно изменена\n\n💰 Сделка №{id}\n👤 Покупатель - {customer_id}(@{customer_nick})\n💎 Продавец - {seller_id}(@{seller_nick})\n\n💳 Сумма - {sum}\n📄 Статус сделки - {status}".format(
-                    id=info[3],
-                    customer_id=info_c[0],
-                    customer_nick=info_c[5],
-                    seller_id=info_s[0],
-                    seller_nick=info_s[5],
-                    sum=info[2],
-                    status=status,
-                ),
-                reply_markup=keyboards.seller_panel,
-            )
-            bot.send_message(
-                info[1],
-                text="💥 Была изменена сумма сделки!\n\n💰 Сделка №{id}\n👤 Покупатель - {customer_id}(@{customer_nick})\n💎 Продавец - {seller_id}(@{seller_nick})\n\n💳 Сумма - {sum}\n📄 Статус сделки - {status}".format(
-                    id=info[3],
-                    customer_id=info_c[0],
-                    customer_nick=info_c[5],
-                    seller_id=info_s[0],
-                    seller_nick=info_s[5],
-                    sum=info[2],
-                    status=status,
-                ),
-                reply_markup=keyboards.customer_panel,
-            )
-    except:
-        bot.send_message(message.chat.id, text=var.ERROR)
-
-
-bot.polling(none_stop=True)
