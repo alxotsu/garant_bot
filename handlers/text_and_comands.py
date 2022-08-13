@@ -1,10 +1,8 @@
 from telebot import types
 
-from bot import bot
-import functions
-import keyboards
-import config
-import var
+from app.bot import bot
+from handlers import functions, keyboards, var
+from app import config
 
 
 @bot.message_handler(commands=["start"])

@@ -1,7 +1,5 @@
-import functions
-import keyboards
-import var
-from bot import bot
+from handlers import functions, keyboards, var
+from app.bot import bot
 
 __all__ = ["register_bot_callback_handler"]
 

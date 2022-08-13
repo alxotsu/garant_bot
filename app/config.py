@@ -1,7 +1,6 @@
 from os import environ
 
-
-DATABASE = environ.setdefault("DATABASE", "db.db")
+DATABASE_URL = environ["DATABASE_URL"]
 BOT_TOKEN = environ["TOKEN"]
 ADMIN_FIRST_CHAT_ID = int(environ["ADMIN_1"])
 ADMIN_SECOND_CHAT_ID = int(environ.setdefault("ADMIN_2", environ["ADMIN_1"]))
@@ -19,3 +18,4 @@ REPLENISH = (
     "👉 Коментарий - <code>{code}</code></b>\n"
     "👉 До 15 000 рублей!"
 )
+

@@ -1,0 +1,42 @@
+version: '3.9'
+
+services:
+  db:
+    image: postgres:14.2
+    volumes:
+      - db_volume:/var/lib/postgresql/data
+    ports:
+      - 5433:5432
+    environment:
+      - POSTGRES_USER=user
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=db
+      - POSTGRES_HOST=127.0.0.1
+      - PGDATA=/var/lib/postgresql/data/pgdata
+    restart: unless-stopped
+    networks:
+      - db_network
+
+  bot:
+    build:
+      context: .
+    volumes:
+      - ./:/bot
+    command: bash -c "
+        python main.py
+      "
+    environment:
+      - DATABASE_URL=postgresql://user:password@db:5432/db
+    env_file:
+      - .env
+    depends_on:
+      - db
+    restart: unless-stopped
+    networks:
+      - db_network
+
+volumes:
+  db_volume:
+
+networks:
+  db_network:

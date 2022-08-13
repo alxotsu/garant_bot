@@ -1,7 +1,9 @@
+import time
+
 from telebot import types
 import telebot
 
-from config import (
+from app.config import (
     BOT_TOKEN,
     ADMIN_FIRST_CHAT_ID,
     ADMIN_USERNAME,
@@ -10,10 +12,7 @@ from config import (
     INSTRUCTION,
     BOT_CHAT_LINK,
 )
-import var
-import functions
-import keyboards
-import time
+from handlers import functions, keyboards, var
 
 balance_dict = {}
 bot = telebot.TeleBot(BOT_TOKEN)
@@ -40,8 +39,8 @@ def start(message: types.Message):
 @bot.message_handler(commands=["admin"])
 def start(message: types.Message):
     if (
-            message.chat.id == ADMIN_FIRST_CHAT_ID
-            or message.chat.id == ADMIN_SECOND_CHAT_ID
+        message.chat.id == ADMIN_FIRST_CHAT_ID
+        or message.chat.id == ADMIN_SECOND_CHAT_ID
     ):
         bot.send_message(
             message.chat.id,
@@ -155,7 +154,9 @@ def handler_call(call):
         )
 
     elif call.data == "bor":
-        bot.send_message(chat_id, text="Что вы хотите сделать?", reply_markup=keyboards.bor)
+        bot.send_message(
+            chat_id, text="Что вы хотите сделать?", reply_markup=keyboards.bor
+        )
 
     elif call.data == "unban":
         msg = bot.send_message(
@@ -205,15 +206,19 @@ def handler_call(call):
             bot.send_message(
                 ADMIN_FIRST_CHAT_ID,
                 text="✅ Произошло пополнение баланса!\nСумма - "
-                     + str(check)
-                     + " рублей",
+                + str(check)
+                + " рублей",
             )
-            bot.send_message(chat_id, text=var.ENABLE_KEYBOARD, reply_markup=keyboards.menu)
+            bot.send_message(
+                chat_id, text=var.ENABLE_KEYBOARD, reply_markup=keyboards.menu
+            )
 
     elif call.data == "canel_payment":
         functions.canel_payment(user_id=chat_id)
         bot.edit_message_text(chat_id=chat_id, message_id=message_id, text=f"Меню")
-        bot.send_message(chat_id, text="Включение клавиатуры", reply_markup=keyboards.menu)
+        bot.send_message(
+            chat_id, text="Включение клавиатуры", reply_markup=keyboards.menu
+        )
 
     elif call.data == "message":
         msg = bot.send_message(
@@ -298,7 +303,9 @@ def handler_call(call):
                 bot.edit_message_text(
                     chat_id=chat_id, message_id=message_id, text="⛔️ Сделка отменена."
                 )
-                bot.send_message(chat_id, text=var.ENABLE_KEYBOARD, reply_markup=keyboards.menu)
+                bot.send_message(
+                    chat_id, text=var.ENABLE_KEYBOARD, reply_markup=keyboards.menu
+                )
                 bot.send_message(
                     info[0],
                     text="🌧 Ваше предложение о проведении сделки отклонили, или с вами пытались её провести, но передумали.",
@@ -321,7 +328,9 @@ def handler_call(call):
                 bot.edit_message_text(
                     chat_id=chat_id, message_id=message_id, text="⛔️ Сделка отменена."
                 )
-                bot.send_message(chat_id, text=var.ENABLE_KEYBOARD, reply_markup=keyboards.menu)
+                bot.send_message(
+                    chat_id, text=var.ENABLE_KEYBOARD, reply_markup=keyboards.menu
+                )
                 bot.send_message(
                     info[1],
                     text="🌧 Ваше предложение о проведении сделки отклонили, или с вами пытались её провести, но передумали.",
@@ -532,10 +541,14 @@ def handler_call(call):
             if info[4] == "open":
                 functions.yes_canel_seller2(chat_id)
                 bot.send_message(
-                    info[0], text="✅ Сделка успешно отменена.", reply_markup=keyboards.menu
+                    info[0],
+                    text="✅ Сделка успешно отменена.",
+                    reply_markup=keyboards.menu,
                 )
                 bot.send_message(
-                    info[1], text="✅ Сделка успешно отменена.", reply_markup=keyboards.menu
+                    info[1],
+                    text="✅ Сделка успешно отменена.",
+                    reply_markup=keyboards.menu,
                 )
             else:
                 bot.answer_callback_query(
@@ -600,10 +613,14 @@ def handler_call(call):
             if info[4] == "open":
                 functions.yes_canel_customer2(chat_id)
                 bot.send_message(
-                    info[0], text="✅ Сделка успешно отменена.", reply_markup=keyboards.menu
+                    info[0],
+                    text="✅ Сделка успешно отменена.",
+                    reply_markup=keyboards.menu,
                 )
                 bot.send_message(
-                    info[1], text="✅ Сделка успешно отменена.", reply_markup=keyboards.menu
+                    info[1],
+                    text="✅ Сделка успешно отменена.",
+                    reply_markup=keyboards.menu,
                 )
             else:
                 bot.answer_callback_query(
@@ -917,7 +934,9 @@ def handler_call(call):
                 message_id=message_id,
                 text="❄️ Сделка успешно завершена!",
             )
-            bot.send_message(chat_id, text=var.ENABLE_KEYBOARD, reply_markup=keyboards.menu)
+            bot.send_message(
+                chat_id, text=var.ENABLE_KEYBOARD, reply_markup=keyboards.menu
+            )
             functions.close_offer(chat_id)
         except:
             bot.send_message(chat_id, text=var.ERROR)
@@ -957,7 +976,9 @@ def add_review(message):
             info = functions.info_offers_customer(message.chat.id)
             functions.add_review(info[0], info[2], message.chat.id, message.text)
             bot.send_message(
-                message.chat.id, text="📝 Отзыв успешно оставлен.", reply_markup=keyboards.menu
+                message.chat.id,
+                text="📝 Отзыв успешно оставлен.",
+                reply_markup=keyboards.menu,
             )
             bot.send_message(
                 info[0],
@@ -1061,9 +1082,9 @@ def write_qiwi1(message):
     try:
         chat_id = message.chat.id
         if (
-                message.text.startswith("+7")
-                or message.text.startswith("+3")
-                or message.text.startswith("+9")
+            message.text.startswith("+7")
+            or message.text.startswith("+3")
+            or message.text.startswith("+9")
         ):
             functions.write_qiwi(chat_id, message.text)
             bot.send_message(chat_id, text="✅ Qiwi установлен")
@@ -1118,8 +1139,8 @@ def search_seller(message):
         else:
             info1 = functions.profile(message.chat.id)
             if (
-                    str(message.text) == message.from_user.username
-                    or info1[5] != message.from_user.username
+                str(message.text) == message.from_user.username
+                or info1[5] != message.from_user.username
             ):
                 bot.send_message(
                     message.chat.id,
@@ -1169,8 +1190,8 @@ def search_customer(message):
         else:
             info1 = functions.profile(message.chat.id)
             if (
-                    str(message.text) == message.from_user.username
-                    or info1[5] != message.from_user.username
+                str(message.text) == message.from_user.username
+                or info1[5] != message.from_user.username
             ):
                 bot.send_message(
                     message.chat.id,

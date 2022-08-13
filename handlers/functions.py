@@ -1,11 +1,11 @@
 import sqlite3
-from config import QIWI_TOKEN, REPLENISH, QIWI_ID, DATABASE
+from app.config import QIWI_TOKEN, REPLENISH, QIWI_ID, DATABASE_URL
 import random
 import requests
 
 
 def first_join(user_id, username):
-    connection = sqlite3.connect(DATABASE)
+    connection = sqlite3.connect(DATABASE_URL)
     q = connection.cursor()
     q = q.execute(f"SELECT * FROM users WHERE user_id = '{user_id}'")
     row = q.fetchone()
@@ -18,11 +18,11 @@ def first_join(user_id, username):
 
 
 def check_user_blocks(user_id):
-    connection = sqlite3.connect(DATABASE)
+    connection = sqlite3.connect(DATABASE_URL)
     q = connection.cursor()
     q = q.execute(f"SELECT ban FROM users WHERE user_id = '{user_id}'")
     row = q.fetchone()
-    if row[0] == '1':
+    if row[0] == "1":
         connection.close()
         return "⛔️ К сожалению, Вы получили блокировку!"
     q = connection.cursor()
@@ -34,102 +34,41 @@ def check_user_blocks(user_id):
         return "⛔️ Вы не можете взаимодействовать с ботом, пока не завершите сделку!"
 
 
-
-def check_ban(user_id):
-    connection = sqlite3.connect(DATABASE)
+def edit_user(user_id, **kwargs):
+    edits = ""
+    for key, value in kwargs.items():
+        edits += f", {key} = '{value}'"
+    edits = edits[2:]
+    query = f"UPDATE users SET {edits} WHERE user_id = {user_id}"
+    connection = sqlite3.connect(DATABASE_URL)
     q = connection.cursor()
-    q = q.execute(f"SELECT ban FROM users WHERE user_id = '{user_id}'")
-    results = q.fetchone()
+    q.execute(query)
     connection.close()
-    return results
 
 
-def profile(user_id):
-    connection = sqlite3.connect(DATABASE)
+def get_user(user_id):
+    connection = sqlite3.connect(DATABASE_URL)
     q = connection.cursor()
     results = q.execute(f"SELECT * FROM users WHERE user_id = '{user_id}'").fetchone()
     connection.close()
     return results
 
 
-def last_offers_seller(user_id):
-    connection = sqlite3.connect(DATABASE)
+def last_offers_seller(user_id, kwarg):
+    connection = sqlite3.connect(DATABASE_URL)
     q = connection.cursor()
     row = q.execute(
-        f"SELECT act FROM last_offers WHERE seller = '{user_id}'"
+        f"SELECT act FROM last_offers WHERE {kwarg} = '{user_id}'"
     ).fetchall()
     connection.close()
     text = ""
     for i in row:
         text = text + "💠 " + i[0] + "\n\n"
     return text
-
-
-def last_offers_customer(user_id):
-    connection = sqlite3.connect(DATABASE)
-    q = connection.cursor()
-    row = q.execute(
-        f"SELECT act FROM last_offers WHERE customer = '{user_id}'"
-    ).fetchall()
-    connection.close()
-    text = ""
-    for i in row:
-        text = text + "💠 " + i[0] + "\n\n"
-    return text
-
-
-def write_qiwi(user_id, qiwi_id):
-    connection = sqlite3.connect(DATABASE)
-    q = connection.cursor()
-    q.execute(f"UPDATE users SET qiwi = ('{qiwi_id}') WHERE user_id = '{user_id}'")
-    connection.commit()
-    connection.close()
-
-
-def output_qiwi(user_id, balance, money):
-    connection = sqlite3.connect(DATABASE)
-    q = connection.cursor()
-    ost = float(balance) - float(money)
-    q.execute(f"UPDATE users SET balance = ('{ost}') WHERE user_id = '{user_id}'")
-    connection.commit()
-    connection.close()
-
-
-def ban(user_id):
-    connection = sqlite3.connect(DATABASE)
-    q = connection.cursor()
-    try:
-        q.execute(f"UPDATE users SET ban = '1' WHERE user_id = '{user_id}'")
-    except:
-        pass
-    connection.commit()
-    connection.close()
-
-
-def unban(user_id):
-    connection = sqlite3.connect(DATABASE)
-    q = connection.cursor()
-    try:
-        q.execute(f"UPDATE users SET ban = '0' WHERE user_id = '{user_id}'")
-    except:
-        pass
-    connection.commit()
-    connection.close()
-
-
-def edit_balance(balance, user_id):
-    connection = sqlite3.connect(DATABASE)
-    q = connection.cursor()
-    try:
-        q.execute(f"UPDATE users SET balance = '{balance}' WHERE user_id = '{user_id}'")
-    except:
-        pass
-    connection.commit()
-    connection.close()
 
 
 def check_payment(user_id):
-    conn = sqlite3.connect(DATABASE)
+    conn = sqlite3.connect(DATABASE_URL)
     cursor = conn.cursor()
     try:
         params = {"rows": "5"}
@@ -150,7 +89,7 @@ def check_payment(user_id):
                 str(comment) in data_obj["comment"]
                 and "643" in data_obj["sum"]["currency"]
             ):
-                info = profile(user_id)
+                info = get_user(user_id)
                 balance = float(info[2]) + float(data_obj["sum"]["amount"])
                 cursor.execute(
                     f"UPDATE users SET balance = '{balance}' WHERE user_id = '{user_id}'"
@@ -164,8 +103,8 @@ def check_payment(user_id):
     conn.close()
 
 
-def canel_payment(user_id):
-    conn = sqlite3.connect(DATABASE)
+def cancel_payment(user_id):
+    conn = sqlite3.connect(DATABASE_URL)
     cursor = conn.cursor()
     cursor.execute(f"DELETE FROM check_payment WHERE user_id = '{user_id}'")
     conn.commit()
@@ -173,7 +112,7 @@ def canel_payment(user_id):
 
 
 def replenish_balance(user_id):
-    conn = sqlite3.connect(DATABASE)
+    conn = sqlite3.connect(DATABASE_URL)
     cursor = conn.cursor()
 
     code = "".join(random.choice("0123456789") for _ in range(6))
@@ -188,7 +127,7 @@ def replenish_balance(user_id):
 
 
 def admin_message():
-    conn = sqlite3.connect(DATABASE)
+    conn = sqlite3.connect(DATABASE_URL)
     cursor = conn.cursor()
     cursor.execute(f"SELECT user_id FROM users")
     row = cursor.fetchall()
@@ -197,7 +136,7 @@ def admin_message():
 
 
 def search(search_line):
-    connection = sqlite3.connect(DATABASE)
+    connection = sqlite3.connect(DATABASE_URL)
     q = connection.cursor()
     row = q.execute(
         f"SELECT * FROM users WHERE user_id = '{search_line}' OR nick = '{search_line}'"
@@ -207,7 +146,7 @@ def search(search_line):
 
 
 def deal(seller_id, customer_id):
-    connection = sqlite3.connect(DATABASE)
+    connection = sqlite3.connect(DATABASE_URL)
     q = connection.cursor()
     q.execute(
         f"INSERT INTO temp_deal (user_id, user_id2, status) VALUES ('{seller_id}', '{customer_id}', 'dont_open')"
@@ -216,54 +155,32 @@ def deal(seller_id, customer_id):
     connection.close()
 
 
-def delete_customer(user_id):
-    conn = sqlite3.connect(DATABASE)
+def delete_deal(user_id):
+    conn = sqlite3.connect(DATABASE_URL)
     cursor = conn.cursor()
-    cursor.execute(f"DELETE FROM temp_deal WHERE user_id2 = '{user_id}'")
+    cursor.execute(
+        f"DELETE FROM temp_deal WHERE user_id2 = '{user_id}' OR user_id = '{user_id}'"
+    )
     conn.commit()
     conn.close()
 
 
-def delete_seller(user_id):
-    conn = sqlite3.connect(DATABASE)
-    cursor = conn.cursor()
-    cursor.execute(f"DELETE FROM temp_deal WHERE user_id = '{user_id}'")
-    conn.commit()
-    conn.close()
-
-
-def info_deal_customer(user_id):
-    conn = sqlite3.connect(DATABASE)
+def info_deal(user_id):
+    conn = sqlite3.connect(DATABASE_URL)
     cursor = conn.cursor()
     row = cursor.execute(
         f"SELECT user_id FROM temp_deal WHERE user_id2 = '{user_id}'"
     ).fetchone()
+    if row is None:
+        row = cursor.execute(
+            f"SELECT user_id2 FROM temp_deal WHERE user_id = '{user_id}'"
+        ).fetchone()
     conn.close()
-    return row
-
-
-def info_deal_seller(user_id):
-    conn = sqlite3.connect(DATABASE)
-    cursor = conn.cursor()
-    row = cursor.execute(
-        f"SELECT user_id2 FROM temp_deal WHERE user_id = '{user_id}'"
-    ).fetchone()
-    conn.close()
-    return row
-
-
-def search_block(user_id):
-    connection = sqlite3.connect(DATABASE)
-    q = connection.cursor()
-    row = q.execute(
-        f"SELECT * FROM temp_deal WHERE user_id = '{user_id}' OR user_id2 = '{user_id}'"
-    ).fetchone()
-    connection.close()
     return row
 
 
 def stats():
-    conn = sqlite3.connect(DATABASE)
+    conn = sqlite3.connect(DATABASE_URL)
     cursor = conn.cursor()
     row = cursor.execute(f"SELECT user_id FROM users").fetchone()
     amount_user_all = 0
@@ -287,64 +204,38 @@ def stats():
     return msg
 
 
-def info_offer_customer(user_id):
-    conn = sqlite3.connect(DATABASE)
+def info_offer(user_id):
+    conn = sqlite3.connect(DATABASE_URL)
     cursor = conn.cursor()
     row = cursor.execute(
-        f"SELECT status FROM temp_deal WHERE user_id2 = '{user_id}'"
+        f"SELECT status FROM temp_deal WHERE user_id2 = '{user_id}' OR user_id = '{user_id}'"
     ).fetchone()
     conn.close()
     return row
 
 
-def info_offer_seller(user_id):
-    conn = sqlite3.connect(DATABASE)
+def accept(user_id):
+    conn = sqlite3.connect(DATABASE_URL)
     cursor = conn.cursor()
-    row = cursor.execute(
-        f"SELECT status FROM temp_deal WHERE user_id = '{user_id}'"
-    ).fetchone()
-    conn.close()
-    return row
-
-
-def accept_customer(user_id):
-    conn = sqlite3.connect(DATABASE)
-    cursor = conn.cursor()
-    cursor.execute(f"UPDATE temp_deal SET status = 'open' WHERE user_id2 = '{user_id}'")
+    cursor.execute(
+        f"UPDATE temp_deal SET status = 'open' WHERE user_id2 = '{user_id}' OR user_id = '{user_id}'"
+    )
     conn.commit()
     conn.close()
 
 
-def accept_seller(user_id):
-    conn = sqlite3.connect(DATABASE)
-    cursor = conn.cursor()
-    cursor.execute(f"UPDATE temp_deal SET status = 'open' WHERE user_id = '{user_id}'")
-    conn.commit()
-    conn.close()
-
-
-def info_offers_seller(user_id):
-    conn = sqlite3.connect(DATABASE)
+def info_offers(user_id):
+    conn = sqlite3.connect(DATABASE_URL)
     cursor = conn.cursor()
     row = cursor.execute(
-        f"SELECT * FROM temp_deal WHERE user_id = '{user_id}'"
-    ).fetchone()
-    conn.close()
-    return row
-
-
-def info_offers_customer(user_id):
-    conn = sqlite3.connect(DATABASE)
-    cursor = conn.cursor()
-    row = cursor.execute(
-        f"SELECT * FROM temp_deal WHERE user_id2 = '{user_id}'"
+        f"SELECT * FROM temp_deal WHERE user_id = '{user_id}' OR user_id2 = '{user_id}'"
     ).fetchone()
     conn.close()
     return row
 
 
 def edit_price(price, user_id):
-    conn = sqlite3.connect(DATABASE)
+    conn = sqlite3.connect(DATABASE_URL)
     cursor = conn.cursor()
     cursor.execute(
         f"UPDATE temp_deal SET sum = ('{price}') WHERE user_id = '{user_id}'"
@@ -354,7 +245,7 @@ def edit_price(price, user_id):
 
 
 def success(user_id, balance):
-    conn = sqlite3.connect(DATABASE)
+    conn = sqlite3.connect(DATABASE_URL)
     cursor = conn.cursor()
     cursor.execute(
         f"UPDATE temp_deal SET status = 'success' WHERE user_id2 = '{user_id}'"
@@ -367,18 +258,12 @@ def success(user_id, balance):
     conn.close()
 
 
-def yes_cancel_seller(user_id):
-    conn = sqlite3.connect(DATABASE)
+def yes_cancel(user_id):
+    conn = sqlite3.connect(DATABASE_URL)
     cursor = conn.cursor()
-    cursor.execute(f"DELETE FROM temp_deal WHERE user_id = '{user_id}'")
-    conn.commit()
-    conn.close()
-
-
-def yes_cancel_customer(user_id):
-    conn = sqlite3.connect(DATABASE)
-    cursor = conn.cursor()
-    cursor.execute(f"DELETE FROM temp_deal WHERE user_id2 = '{user_id}'")
+    cursor.execute(
+        f"DELETE FROM temp_deal WHERE user_id = '{user_id}' OR user_id2 = '{user_id}'"
+    )
     conn.commit()
     conn.close()
 
@@ -394,7 +279,7 @@ def ok(
     seller_offers,
     customer_offers,
 ):
-    conn = sqlite3.connect(DATABASE)
+    conn = sqlite3.connect(DATABASE_URL)
     cursor = conn.cursor()
     balance = float(seller_amount) + float(amount)
     cursor.execute(
@@ -433,28 +318,18 @@ def ok(
     conn.close()
 
 
-def dispute_customer(chat_id):
-    conn = sqlite3.connect(DATABASE)
+def dispute(chat_id):
+    conn = sqlite3.connect(DATABASE_URL)
     cursor = conn.cursor()
     cursor.execute(
-        f"UPDATE temp_deal SET status = ('dispute') WHERE user_id2 = '{chat_id}'"
-    )
-    conn.commit()
-    conn.close()
-
-
-def dispute_seller(chat_id):
-    conn = sqlite3.connect(DATABASE)
-    cursor = conn.cursor()
-    cursor.execute(
-        f"UPDATE temp_deal SET status = ('dispute') WHERE user_id = '{chat_id}'"
+        f"UPDATE temp_deal SET status = ('dispute') WHERE user_id2 = '{chat_id}' OR user_id2 = '{chat_id}'"
     )
     conn.commit()
     conn.close()
 
 
 def dispute_info(user_id):
-    conn = sqlite3.connect(DATABASE)
+    conn = sqlite3.connect(DATABASE_URL)
     q = conn.cursor()
     row = q.execute(f"SELECT * FROM temp_deal WHERE id_offer = '{user_id}'")
     row = row.fetchone()
@@ -463,7 +338,7 @@ def dispute_info(user_id):
 
 
 def deal_true(offer_id, user_id, amount_customer, amount_offer):
-    conn = sqlite3.connect(DATABASE)
+    conn = sqlite3.connect(DATABASE_URL)
     cursor = conn.cursor()
     balance_customer = float(amount_customer) + float(amount_offer)
     cursor.execute(
@@ -474,26 +349,19 @@ def deal_true(offer_id, user_id, amount_customer, amount_offer):
     conn.close()
 
 
-def dispute_info_customer(user_id):
-    conn = sqlite3.connect(DATABASE)
+def dispute_info_user(user_id):
+    conn = sqlite3.connect(DATABASE_URL)
     q = conn.cursor()
-    row = q.execute(f"SELECT * FROM temp_deal WHERE user_id2 = '{user_id}'")
-    row = row.fetchone()
-    conn.close()
-    return row
-
-
-def dispute_info_seller(user_id):
-    conn = sqlite3.connect(DATABASE)
-    q = conn.cursor()
-    row = q.execute(f"SELECT * FROM temp_deal WHERE user_id = '{user_id}'")
+    row = q.execute(
+        f"SELECT * FROM temp_deal WHERE user_id = '{user_id}' OR user_id2 = '{user_id}'"
+    )
     row = row.fetchone()
     conn.close()
     return row
 
 
 def check_deal(user_id):
-    connection = sqlite3.connect(DATABASE)
+    connection = sqlite3.connect(DATABASE_URL)
     q = connection.cursor()
     result = q.execute(f"SELECT user_id FROM users WHERE nick = '{user_id}'").fetchone()
     row = q.execute(
@@ -508,7 +376,7 @@ def check_deal(user_id):
 
 
 def up_login(username, user_id):
-    connection = sqlite3.connect(DATABASE)
+    connection = sqlite3.connect(DATABASE_URL)
     q = connection.cursor()
     result = q.execute(
         f"SELECT user_id FROM users WHERE nick = '{username}'"
@@ -521,24 +389,25 @@ def up_login(username, user_id):
 
 
 def cancel_open_offer(user_id):
-    connection = sqlite3.connect(DATABASE)
+    connection = sqlite3.connect(DATABASE_URL)
     q = connection.cursor()
     result = q.execute(
         f"SELECT * FROM temp_deal WHERE user_id2 = '{user_id}' OR user_id = '{user_id}'"
     ).fetchone()
-    connection.close()
     if result[4] == "dont_open":
         q.execute(
             f"DELETE FROM temp_deal WHERE user_id2 = '{user_id}' OR user_id = '{user_id}'"
         )
         connection.commit()
+        connection.close()
         return True, result[0]
     else:
+        connection.close()
         return False, None
 
 
 def reviews(user_id):
-    connection = sqlite3.connect(DATABASE)
+    connection = sqlite3.connect(DATABASE_URL)
     q = connection.cursor()
     row = q.execute(f"SELECT review FROM reviews WHERE seller = '{user_id}'").fetchall()
     text = ""
@@ -549,7 +418,7 @@ def reviews(user_id):
 
 
 def close_offer(user_id):
-    connection = sqlite3.connect(DATABASE)
+    connection = sqlite3.connect(DATABASE_URL)
     q = connection.cursor()
     q.execute(
         f"DELETE FROM temp_deal WHERE user_id2 = '{user_id}' OR user_id = '{user_id}'"
@@ -559,7 +428,7 @@ def close_offer(user_id):
 
 
 def add_review(seller_id, sums, customer_id, review):
-    connection = sqlite3.connect(DATABASE)
+    connection = sqlite3.connect(DATABASE_URL)
     q = connection.cursor()
     q.execute(
         "INSERT INTO reviews (seller, sum, customer, review) VALUES ('%s', '%s', '%s', '%s')"
