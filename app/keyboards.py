@@ -8,39 +8,54 @@ menu.add(
     types.KeyboardButton("🔒 Провести сделку"),
 )
 
+admin = types.ReplyKeyboardMarkup(resize_keyboard=True)
+admin.add(
+    types.KeyboardButton("Бан-система"),
+    types.KeyboardButton("Рассылка"),
+    types.KeyboardButton("Статистика"),
+    types.KeyboardButton("Решение спора"),
+)
+
 profile = types.InlineKeyboardMarkup(row_width=2)
 profile.add(
     types.InlineKeyboardButton("Вывод средств", callback_data="output"),
     types.InlineKeyboardButton("Пополнение баланса", callback_data="input"),
-    types.InlineKeyboardButton("Изменить Qiwi", callback_data="qiwi_num"),
-    types.InlineKeyboardButton("Обновить логин", callback_data="up_login"),
+    types.InlineKeyboardButton(
+        "Изменить адрес Metamask", callback_data="change_metamask"
+    ),
 )
 
-cors = types.InlineKeyboardMarkup()
-cors.add(
-    types.InlineKeyboardButton("💎 Продавец", callback_data="seller"),
-    types.InlineKeyboardButton("💰 Покупатель", callback_data="customer"),
+init_offer = types.InlineKeyboardMarkup()
+init_offer.add(
+    types.InlineKeyboardButton("💎 Покупатель", callback_data="customer_offer_init"),
+    types.InlineKeyboardButton("💰 Продавец", callback_data="seller_offer_init"),
 )
+
+show_offers = types.InlineKeyboardMarkup()
+show_offers.add(
+    types.InlineKeyboardButton("💎 Продавец", callback_data="seller_offer_get"),
+    types.InlineKeyboardButton("💰 Покупатель", callback_data="customer_offer_get"),
+)
+
+bou = types.InlineKeyboardMarkup(row_width=2)
+bou.add(
+    types.InlineKeyboardButton("Забанить", callback_data="ban"),
+    types.InlineKeyboardButton("Разбанить", callback_data="unban"),
+)
+
+solve_dispute = types.InlineKeyboardMarkup(row_width=2)
+solve_dispute.add(
+    types.InlineKeyboardButton("💎 Покупатель", callback_data="customer_solve_dispute"),
+    types.InlineKeyboardButton("💰 Продавец", callback_data="seller_solve_dispute"),
+    types.InlineKeyboardButton("❌ Никто", callback_data="no_solve_dispute"),
+)
+
+######
 
 qiwi = types.InlineKeyboardMarkup()
 qiwi.add(
     types.InlineKeyboardButton("Изменить Qiwi", callback_data="qiwi_num"),
     types.InlineKeyboardButton("❌ Назад", callback_data="menu"),
-)
-
-admin = types.InlineKeyboardMarkup(row_width=2)
-admin.add(
-    types.InlineKeyboardButton("Бан-система", callback_data="bor"),
-    types.InlineKeyboardButton("Рассылка", callback_data="message"),
-    types.InlineKeyboardButton("Изменение баланса", callback_data="edit_balance"),
-    types.InlineKeyboardButton("Статистика", callback_data="statistics"),
-    types.InlineKeyboardButton("Решение спора", callback_data="dispute_admin"),
-    types.InlineKeyboardButton("Назад", callback_data="menu"),
-)
-bor = types.InlineKeyboardMarkup(row_width=2)
-bor.add(
-    types.InlineKeyboardButton("Забанить", callback_data="ban"),
-    types.InlineKeyboardButton("Разбанить", callback_data="unban"),
 )
 
 cancel = types.InlineKeyboardMarkup()
@@ -76,12 +91,6 @@ sentence_seller.add(
 
 cancel_button = types.ReplyKeyboardMarkup(resize_keyboard=True)
 cancel_button.add(types.KeyboardButton("❌ Назад"))
-
-choise_offer = types.InlineKeyboardMarkup()
-choise_offer.add(
-    types.InlineKeyboardButton("💎 Покупатель", callback_data="customer_offer"),
-    types.InlineKeyboardButton("💰 Продавец", callback_data="seller_offer"),
-)
 
 seller_panel = types.InlineKeyboardMarkup(row_width=2)
 seller_panel.add(
@@ -134,12 +143,6 @@ replenish_balance.add(
     types.InlineKeyboardButton("❌ Отмена", callback_data="cancel_payment"),
 )
 
-choise_admin = types.InlineKeyboardMarkup(row_width=2)
-choise_admin.add(
-    types.InlineKeyboardButton("💎 Покупатель", callback_data="customer_true"),
-    types.InlineKeyboardButton("💰 Продавец", callback_data="seller_true"),
-    types.InlineKeyboardButton("❌ Никто", callback_data="no_true"),
-)
 
 cancel_offer_customer = types.InlineKeyboardMarkup()
 cancel_offer_customer.add(
