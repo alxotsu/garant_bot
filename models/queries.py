@@ -18,14 +18,21 @@ def new_user(chat_id):
     user = get_user(chat_id)
     if user is None:
         user = User(chat_id=chat_id)
-        session.add(user)
-        session.commit()
+        user.save()
     return user
 
 
 def get_offers_count():
-    return session.query(Offer).all().count()
+    return session.query(Offer).count()
 
 
 def get_deal(deal_id):
     return session.query(Deal).filter_by(id=deal_id).first()
+
+
+def new_withdrawal(chat_id, metamask_address, amount):
+    withdrawal = Withdrawal(
+        user_id=chat_id, metamask_address=metamask_address, amount=amount
+    )
+    withdrawal.save()
+    return withdrawal

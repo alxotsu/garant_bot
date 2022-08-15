@@ -20,43 +20,41 @@ profile = types.InlineKeyboardMarkup(row_width=2)
 profile.add(
     types.InlineKeyboardButton("Вывод средств", callback_data="output"),
     types.InlineKeyboardButton("Пополнение баланса", callback_data="input"),
-    types.InlineKeyboardButton(
-        "Изменить адрес Metamask", callback_data="change_metamask"
-    ),
+    types.InlineKeyboardButton("Изменить Metamask", callback_data="change_metamask"),
 )
 
-init_offer = types.InlineKeyboardMarkup()
+init_offer = types.InlineKeyboardMarkup()  # TODO
 init_offer.add(
     types.InlineKeyboardButton("💎 Покупатель", callback_data="customer_offer_init"),
     types.InlineKeyboardButton("💰 Продавец", callback_data="seller_offer_init"),
 )
 
-show_offers = types.InlineKeyboardMarkup()
+show_offers = types.InlineKeyboardMarkup()  # TODO
 show_offers.add(
     types.InlineKeyboardButton("💎 Продавец", callback_data="seller_offer_get"),
     types.InlineKeyboardButton("💰 Покупатель", callback_data="customer_offer_get"),
 )
 
-bou = types.InlineKeyboardMarkup(row_width=2)
+bou = types.InlineKeyboardMarkup(row_width=2)  # TODO
 bou.add(
     types.InlineKeyboardButton("Забанить", callback_data="ban"),
     types.InlineKeyboardButton("Разбанить", callback_data="unban"),
 )
 
-solve_dispute = types.InlineKeyboardMarkup(row_width=2)
+solve_dispute = types.InlineKeyboardMarkup(row_width=2)  # TODO
 solve_dispute.add(
     types.InlineKeyboardButton("💎 Покупатель", callback_data="customer_solve_dispute"),
     types.InlineKeyboardButton("💰 Продавец", callback_data="seller_solve_dispute"),
     types.InlineKeyboardButton("❌ Никто", callback_data="no_solve_dispute"),
 )
 
-######
-
-qiwi = types.InlineKeyboardMarkup()
-qiwi.add(
-    types.InlineKeyboardButton("Изменить Qiwi", callback_data="qiwi_num"),
-    types.InlineKeyboardButton("❌ Назад", callback_data="menu"),
+change_metamask = types.InlineKeyboardMarkup()
+change_metamask.add(
+    types.InlineKeyboardButton("Изменить Metamask", callback_data="change_metamask"),
+    types.InlineKeyboardButton("❌ Назад", callback_data="menu"),  # TODO
 )
+
+#####
 
 cancel = types.InlineKeyboardMarkup()
 cancel.add(types.InlineKeyboardButton("❌ Назад", callback_data="menu"))

@@ -8,13 +8,8 @@ BOT_CHAT_LINK = environ["BOT_CHAT_LINK"]
 INSTRUCTION = environ["INSTRUCTION_LINK"]
 ADMIN_USERNAME = environ["ADMIN_USERNAME"]
 PERCENT = int(environ["PERCENT"])
-QIWI_ID = environ["QIWI_ID"]
+METAMASK_ADDRESS = environ["METAMASK_ADDRESS"]
 QIWI_TOKEN = environ["QIWI_TOKEN"]
 
-REPLENISH = (
-    "⚠️ Пополнение баланса\n\n"
-    "🥝 Qiwi \n\n"
-    f"👉 Номер(Qiwi) - <b><code>{QIWI_ID}</code>\n"
-    "👉 Коментарий - <code>{code}</code></b>\n"
-    "👉 До 15 000 рублей!"
-)
+if PERCENT >= 100:
+    raise Exception("Комиссия за вывод не может быть выше 100%")

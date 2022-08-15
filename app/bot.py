@@ -6,4 +6,4 @@ __all__ = ["bot"]
 
 bot = telebot.TeleBot(BOT_TOKEN)
 
-import handlers
+import handlers  # Setting up handlers here
