@@ -16,7 +16,11 @@ def start(message: types.Message):
             chat_id, "⛔️ Вам необходимо установить Имя пользователя для работы с ботом."
         )
     else:
-        queries.new_user(chat_id)
+        user = queries.new_user(chat_id)
+        info = functions.check_user_blocks(user)
+        if info is not None:
+            bot.send_message(chat_id, info)
+            return
         bot.send_message(
             chat_id,
             f"✅ Добро пожаловать, {message.from_user.first_name}!",
@@ -27,6 +31,14 @@ def start(message: types.Message):
 @bot.message_handler(commands=["admin"])
 def start(message: types.Message):
     if functions.check_admin_permission(message.chat.id):
+
+        user = queries.get_user(message.chat.id)
+        if user is not None:
+            info = functions.check_user_blocks(user)
+            if info is not None:
+                bot.send_message(message.chat.id, info)
+                return
+
         bot.send_message(
             message.chat.id,
             f"✅ {message.from_user.first_name}, вы авторизованы.",
@@ -48,7 +60,7 @@ def send_text(message):
             bot.send_message(
                 chat_id,
                 f"🧾 Профиль:\n\n"
-                f"❕ Ваш id - <b><code>{user.chat_id}</code></b>\n"
+                f"❕ Ваш ChatID - <b><code>{user.chat_id}</code></b>\n"
                 f"❕ Проведенных сделок - {len(user.customer_offers) + len(user.seller_offers)}\n\n"
                 f"💰 Ваш баланс - {user.balance} рублей\n"
                 f"💳 Ваш адрес Metamask - {user.metamask_address if user.metamask_address is not None else 'Не указан'}",

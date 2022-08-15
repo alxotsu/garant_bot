@@ -5,6 +5,24 @@ from app import config
 from models import queries
 
 
+def ban_user(message):
+    if functions.ban_or_unban_user(message, True):
+        bot.send_message(message.chat.id, text="✅ Пользователь успешно забанен.")
+
+
+def unban_user(message):
+    if functions.ban_or_unban_user(message, False):
+        bot.send_message(message.chat.id, text="✅ Пользователь успешно разбанен.")
+
+
+def customer_solve_dispute(message):
+    functions.solve_dispute(message, True)
+
+
+def seller_solve_dispute(message):
+    functions.solve_dispute(message, False)
+
+
 def send_message_for_all_users(message):
     if not functions.check_admin_permission(message.chat.id):
         return
@@ -92,3 +110,39 @@ def change_metamask(message):
     user.metamask_address = message.text
     user.save()
     bot.send_message(message.chat.id, text="✅ Metamask установлен")
+
+
+def search_seller_for_init(message):
+    second_user = functions.search_second_user(message)
+
+    if second_user is None:
+        return
+
+    bot.send_message(
+        message.chat.id,
+        "🧾 Профиль:\n\n"
+        f"❕ ChatID - <b><code>{second_user.chat_id}</code></b>\n"
+        f"❕ Имя пользователя - @{bot.get_chat(second_user.chat_id).username}\n"
+        f"❕ Проведенных сделок - {len(second_user.customer_offers) + len(second_user.seller_offers)}\n\n"
+        "🔥В этой сделке вы будете покупателем!",
+        reply_markup=keyboards.sentence_customer,
+        parse_mode="HTML",
+    )
+
+
+def search_customer_for_init(message):
+    second_user = functions.search_second_user(message)
+
+    if second_user is None:
+        return
+
+    bot.send_message(
+        message.chat.id,
+        "🧾 Профиль:\n\n"
+        f"❕ ChatID - <b><code>{second_user.chat_id}</code></b>\n"
+        f"❕ Имя пользователя - @{bot.get_chat(second_user.chat_id).username}\n"
+        f"❕ Проведенных сделок - {len(second_user.customer_offers) + len(second_user.seller_offers)}\n\n"
+        "🔥В этой сделке вы будете продавцом!",
+        reply_markup=keyboards.sentence_seller,
+        parse_mode="HTML",
+    )
