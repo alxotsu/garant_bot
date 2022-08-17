@@ -44,7 +44,3 @@ def new_withdrawal(chat_id, metamask_address, amount):
     )
     withdrawal.save()
     return withdrawal
-
-
-def get_reviews(chat_id):
-    return session.query(Review).filter_by(seller_id=chat_id).all()

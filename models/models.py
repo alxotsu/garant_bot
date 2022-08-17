@@ -8,7 +8,7 @@ from sqlalchemy.orm import sessionmaker
 
 from app.config import DATABASE_URL
 
-__all__ = ["User", "Deal", "Review", "Offer", "Withdrawal"]
+__all__ = ["User", "Deal", "Offer", "Withdrawal"]
 
 engine = create_engine(DATABASE_URL)
 Base = declarative_base(bind=engine)
@@ -42,13 +42,6 @@ class User(Base, SaveDeleteModelMixin):
     )
     seller_deal = sql.orm.relationship(
         "Deal", back_populates="seller", uselist=False, foreign_keys="Deal.seller_id"
-    )
-
-    customer_reviews = sql.orm.relationship(
-        "Review", back_populates="customer", foreign_keys="Review.customer_id"
-    )
-    seller_reviews = sql.orm.relationship(
-        "Review", back_populates="seller", foreign_keys="Review.seller_id"
     )
 
     customer_offers = sql.orm.relationship(
@@ -87,24 +80,6 @@ class Deal(Base, SaveDeleteModelMixin):
     )
 
 
-class Review(Base, SaveDeleteModelMixin):
-    __tablename__ = "review"
-
-    id = sql.Column(sql.Integer, primary_key=True)
-    customer_id = sql.Column(
-        sql.Integer, sql.ForeignKey("user.chat_id"), primary_key=True
-    )
-    seller_id = sql.Column(sql.Integer, sql.ForeignKey("user.chat_id"), nullable=False)
-    review_text = sql.Column(sql.String(1024), nullable=False)
-
-    customer = sql.orm.relationship(
-        "User", back_populates="customer_reviews", foreign_keys="Review.customer_id"
-    )
-    seller = sql.orm.relationship(
-        "User", back_populates="seller_reviews", foreign_keys="Review.seller_id"
-    )
-
-
 class Offer(Base, SaveDeleteModelMixin):
     __tablename__ = "offer"
 
@@ -114,6 +89,7 @@ class Offer(Base, SaveDeleteModelMixin):
     )
     seller_id = sql.Column(sql.Integer, sql.ForeignKey("user.chat_id"), nullable=False)
     amount = sql.Column(sql.DECIMAL, default=0, nullable=False)
+    review = sql.Column(sql.String(1024))
 
     customer = sql.orm.relationship(
         "User", back_populates="customer_offers", foreign_keys="Offer.customer_id"

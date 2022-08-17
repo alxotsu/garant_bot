@@ -146,3 +146,27 @@ def search_customer_for_init(message):
         parse_mode="HTML",
     )
     bot.send_message(chat_id=message.chat.id, reply_markup=types.ReplyKeyboardRemove())
+
+
+def set_price(message):
+    if message.text.startswith("-") or not message.text.isdigit():
+        bot.send_message(message.chat.id, text="Отмена...")
+        return
+
+    deal = queries.get_user(message.chat.id).seller_deal
+    if deal.amount != 0:
+        return
+
+    deal.amount = int(message.text)
+    deal.save()
+
+    bot.send_message(
+        deal.seller_id,
+        text=f"💥 Сумма сделки успешно изменена.\n\n💰 Сделка {functions.format_deal_info(deal)}",
+        reply_markup=keyboards.seller_panel,
+    )
+    bot.send_message(
+        deal.customer_id,
+        text=f"💥 Была изменена сумма сделки.\n\n💰 Сделка {functions.format_deal_info(deal)}",
+        reply_markup=keyboards.seller_panel,
+    )

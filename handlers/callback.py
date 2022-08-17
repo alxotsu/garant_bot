@@ -261,9 +261,7 @@ def callback_handler(call):
     bot.edit_message_text(
         chat_id=chat_id, message_id=message_id, text="⛔️ Сделка отменена."
     )
-    bot.edit_message_text(
-        chat_id=second_chat_id, message_id=message_id, text="⛔️ Сделка отменена."
-    )
+    bot.send_message(chat_id=second_chat_id, text="⛔️ Сделка отменена.")
     deal.delete()
 
 
@@ -277,12 +275,17 @@ def callback_handler(call):
     else:
         second_chat_id = user.customer_deal.seller_id
 
-    reviews = queries.get_reviews(second_chat_id)
+    offers = queries.get_user(second_chat_id).seller_offers
 
-    if len(reviews) == 0:
+    text = ""
+    for offer in offers:
+        if offer.review is not None:
+            text += f"💠 {offer.review}\n\n"
+
+    if text == "":
         bot.send_message(chat_id=chat_id, text="⛔️ отзывов не обнаружено.")
         return
-    text = "💠 " + "\n\n💠 ".join(reviews)
+
     bot.send_message(chat_id=chat_id, text=text)
 
 
@@ -307,4 +310,157 @@ def callback_handler(call):
         message_id=message_id,
         text=f"💰 Сделка {functions.format_deal_info(deal)}",
         reply_markup=keyboards.seller_panel,
+    )
+
+
+@register_bot_callback_handler("set_price")
+def callback_handler(call):
+    chat_id = call.message.chat.id
+
+    user = queries.get_user(chat_id)
+    deal = user.seller_deal
+    if deal.amount != 0:
+        bot.send_message(
+            chat_id, text="Вы уже ввели сумму товара и не можете её редактировать."
+        )
+        return
+
+    msg = bot.send_message(
+        chat_id,
+        text='Введите сумму сделки. Обратите внимание, сумму сделки можно ввести всего один раз \n\nДля отмены напишите "-" без кавычек.',
+    )
+    bot.register_next_step_handler(msg, next_step_hadlers.set_price)
+
+
+@register_bot_callback_handler("open_dispute")
+def callback_handler(call):
+    chat_id = call.message.chat.id
+
+    user = queries.get_user(chat_id)
+    deal = user.seller_deal or user.customer_deal
+
+    if deal.status == Deal.Status.new:
+        bot.send_message(chat_id, text="⛔️ Сделка ещё не открыта!")
+        return
+
+    if deal.status == Deal.Status.open:
+        bot.send_message(
+            chat_id,
+            text=f"⛔️ Передача товара ещё подтверждена. Если Вы считаете, что другой участник сделки хочет вас обмануть, закройте сделку и сообщите администратору - @{config.ADMIN_USERNAME}",
+        )
+        return
+
+    if deal.status == Deal.Status.dispute:
+        bot.send_message(
+            chat_id,
+            text=f"⛔️ Спор уже начат. Если долго ничего не происходит, напишите администратору @{config.ADMIN_USERNAME}.",
+        )
+        return
+
+    deal.status = Deal.Status.dispute
+    deal.save()
+
+    bot.send_message(
+        deal.customer_id,
+        text=f"По вашей сделке начат спор. Если долго ничего не происходит, напишите администратору @{config.ADMIN_USERNAME}.",
+    )
+    bot.send_message(
+        deal.seller_id,
+        text=f"По вашей сделке начат спор. Если долго ничего не происходит, напишите администратору @{config.ADMIN_USERNAME}.",
+    )
+
+    bot.send_message(
+        config.ADMIN_FIRST_CHAT_ID,
+        text=f"Был начат спор.\n\n"
+        f"Сделка {functions.format_deal_info(deal)}\n\n"
+        f'Спор инициировал {"продавец" if user.seller_deal else "покупатель"}.',
+        parse_mode="HTML",
+    )
+
+
+@register_bot_callback_handler("confirm_fund")
+def callback_handler(call):
+    chat_id = call.message.chat.id
+
+    user = queries.get_user(chat_id)
+    deal = user.customer_deal
+
+    if deal.status == Deal.Status.success:
+        bot.send_message(
+            chat_id,
+            text="Вы уверены что получили товар, и он валидный? Если нет, или условия не соблюдены, то вам необходимо открыть спор.",
+            reply_markup=keyboards.confirm_fund,
+        )
+    else:
+        bot.send_message(
+            chat_id, text="✅ Вы не оплатили сделку, или над ней ведётся спор."
+        )
+
+
+@register_bot_callback_handler("close_deal")
+def callback_handler(call):
+    chat_id = call.message.chat.id
+    bot.send_message(
+        chat_id,
+        text="Вы уверены что хотите отменить сделку?",
+        reply_markup=keyboards.choice_close_deal,
+    )
+
+
+@register_bot_callback_handler("self_delete")
+def callback_handler(call):
+    chat_id = call.message.chat.id
+    message_id = call.message.message_id
+    bot.delete_message(chat_id, message_id)
+
+
+@register_bot_callback_handler("pay")
+def callback_handler(call):
+    chat_id = call.message.chat.id
+    bot.send_message(
+        chat_id,
+        text="Вы уверены что хотите отменить сделку?",
+        reply_markup=keyboards.choice_close_deal,
+    )
+
+    user = queries.get_user(chat_id)
+    deal = user.customer_deal
+    if deal == 0:
+        bot.answer_callback_query(
+            callback_query_id=call.id,
+            show_alert=True,
+            text="⛔️ Продавец не указал сумму.",
+        )
+        return
+
+    if deal.status == Deal.Status.success:
+        bot.answer_callback_query(
+            callback_query_id=call.id,
+            show_alert=True,
+            text="Вы уже оплатили товар, продавец обязан вам его передать. Если продавец отказывается передать товар, откройте спор.",
+        )
+        return
+
+    if user.balance < deal.amount:
+        bot.send_message(
+            chat_id,
+            text="📉 Вам необходимо пополнить баланс!\n"
+            f"💰 Ваш баланс - {user.balance} рублей\n"
+            f"💳 Необходимый баланс - {deal.amount} рублей\n\n"
+            f"Если Вы указали в своём профиле адрес Metamask кошелька, Вы можете выполнить перевод на <b><code>{config.METAMASK_ADDRESS}</code></b>, средства зачислятся автоматически.\n"
+            "В противном случае Вам необходимо отменить сделку для привязки кошелька к профилю.",
+            parse_mode="HTML",
+        )
+        return
+
+    deal.customer.balance -= deal.amount
+    deal.customer.save()
+
+    bot.send_message(
+        deal.seller_id,
+        text="✅ Покупатель оплатил товар! Теперь Вам необходимо передать товар.",
+    )
+    bot.send_message(
+        deal.customer_id,
+        text="✅ Товар был успешно оплачен, ожидайте получения товара. Если товар оказался не валид, или продавец Вас кинул в ЧС, откройте спор.",
     )

@@ -70,30 +70,40 @@ accept_deal.add(
     types.InlineKeyboardButton("❌ Отклонить", callback_data="refuse_deal"),
 )
 
-seller_panel = types.InlineKeyboardMarkup(row_width=2)  # TODO
+seller_panel = types.InlineKeyboardMarkup(row_width=2)
 seller_panel.add(
-    types.InlineKeyboardButton("Открыть спор", callback_data="open_dispute_seller"),
-    types.InlineKeyboardButton("Отменить сделку", callback_data="cancel_open_seller"),
-    types.InlineKeyboardButton("Указать стоимость", callback_data="price"),
+    types.InlineKeyboardButton("Открыть спор", callback_data="open_dispute"),
+    types.InlineKeyboardButton("Закрыть сделку", callback_data="close_deal"),
+    types.InlineKeyboardButton("Указать стоимость", callback_data="set_price"),
 )
 
-customer_panel = types.InlineKeyboardMarkup(row_width=2)  # TODO
+customer_panel = types.InlineKeyboardMarkup(row_width=2)
 customer_panel.add(
-    types.InlineKeyboardButton("Оплатить товар", callback_data="input_panel"),
-    types.InlineKeyboardButton("Отменить сделку", callback_data="cancel_open"),
+    types.InlineKeyboardButton("Оплатить товар", callback_data="pay"),
+    types.InlineKeyboardButton("Закрыть сделку", callback_data="close_deal"),
     types.InlineKeyboardButton("Открыть спор", callback_data="open_dispute"),
-    types.InlineKeyboardButton("Подтвердить получение", callback_data="ok"),
+    types.InlineKeyboardButton("Подтвердить получение", callback_data="confirm_fund"),
+)
+
+
+confirm_fund = types.InlineKeyboardMarkup()
+confirm_fund.add(
+    types.InlineKeyboardButton(
+        "✅ Согласиться", callback_data="confirm_confirm_fund"
+    ),  # TODO
+    types.InlineKeyboardButton("❌ Открыть спор", callback_data="open_dispute"),
+)
+
+
+choice_close_deal = types.InlineKeyboardMarkup()
+choice_close_deal.add(
+    types.InlineKeyboardButton("✅ Да", callback_data="close_close_deal"),  # TODO
+    types.InlineKeyboardButton("❌ Нет", callback_data="self_delete"),
 )
 
 
 #####
 
-
-choise_cancel = types.InlineKeyboardMarkup()
-choise_cancel.add(
-    types.InlineKeyboardButton("✅ Да", callback_data="Yes_cancel"),
-    types.InlineKeyboardButton("❌ Нет", callback_data="No_cancel"),
-)
 
 choise_cancel_seller = types.InlineKeyboardMarkup()
 choise_cancel_seller.add(
@@ -111,18 +121,6 @@ choise_cancel_customer = types.InlineKeyboardMarkup()
 choise_cancel_customer.add(
     types.InlineKeyboardButton("✅ Согласиться", callback_data="Yes_cancel_customer"),
     types.InlineKeyboardButton("❌ Отказаться", callback_data="No_cancel_customer"),
-)
-
-ok_choise = types.InlineKeyboardMarkup()
-ok_choise.add(
-    types.InlineKeyboardButton("✅ Согласиться", callback_data="ok_ok"),
-    types.InlineKeyboardButton("❌ Отказаться", callback_data="ok_cancel"),
-)
-
-replenish_balance = types.InlineKeyboardMarkup(row_width=2)
-replenish_balance.add(
-    types.InlineKeyboardButton("💰 Проверить оплату", callback_data="check_payment"),
-    types.InlineKeyboardButton("❌ Отмена", callback_data="cancel_payment"),
 )
 
 
