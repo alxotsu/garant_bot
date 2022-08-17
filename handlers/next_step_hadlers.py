@@ -126,7 +126,7 @@ def search_seller_for_init(message):
         reply_markup=keyboards.sentence_deal,
         parse_mode="HTML",
     )
-    bot.send_message(chat_id=message.chat.id, reply_markup=types.ReplyKeyboardRemove())
+    bot.send_message(chat_id=message.chat.id, text="Отключение клавиатуры...", reply_markup=types.ReplyKeyboardRemove())
 
 
 def search_customer_for_init(message):
@@ -145,7 +145,7 @@ def search_customer_for_init(message):
         reply_markup=keyboards.sentence_deal,
         parse_mode="HTML",
     )
-    bot.send_message(chat_id=message.chat.id, reply_markup=types.ReplyKeyboardRemove())
+    bot.send_message(chat_id=message.chat.id, text="Отключение клавиатуры...", reply_markup=types.ReplyKeyboardRemove())
 
 
 def set_price(message):
@@ -164,16 +164,18 @@ def set_price(message):
         deal.seller_id,
         text=f"💥 Сумма сделки успешно изменена.\n\n💰 Сделка {functions.format_deal_info(deal)}",
         reply_markup=keyboards.seller_panel,
+        parse_mode="HTML"
     )
     bot.send_message(
         deal.customer_id,
         text=f"💥 Была изменена сумма сделки.\n\n💰 Сделка {functions.format_deal_info(deal)}",
-        reply_markup=keyboards.seller_panel,
+        reply_markup=keyboards.customer_panel,
+        parse_mode="HTML"
     )
 
 
 def add_review(message):
-    deal = queries.get_user(message.chat.id)
+    deal = queries.get_user(message.chat.id).customer_deal
     if deal.status != Deal.Status.review:
         return
 

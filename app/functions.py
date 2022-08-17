@@ -107,5 +107,5 @@ def format_deal_info(deal):
         f"❕ Покупатель - @{customer_username} (ChatID <b><code>{deal.customer_id}</code></b>)\n"
         f"❕ Продавец - @{seller_username} (ChatID <b><code>{deal.seller_id}</code></b>)\n"
         f"💰 Сумма сделки - {deal.amount} рублей\n"
-        f"📊 Статус сделки - {deal.status}"
+        f"📊 Статус сделки - {deal.status.value}"
     )
