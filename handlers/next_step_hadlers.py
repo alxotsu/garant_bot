@@ -1,3 +1,5 @@
+from telebot import types
+
 from app.bot import bot
 from app import functions
 from app import keyboards
@@ -61,15 +63,11 @@ def search_dispute(message):
         if deal is None:
             bot.send_message(message.chat.id, text="⛔️ Сделка не обнаружена!")
             return
-        seller_username = bot.get_chat(deal.seller.chat_id).username
-        customer_username = bot.get_chat(deal.customer.chat_id).username
         bot.send_message(
             message.chat.id,
-            text=f"🧾 Информация о сделке №{deal.id}\n\n"
-            f"❕ Покупатель - @{customer_username} (ChatID <b><code>{deal.customer_id}</code></b>)\n"
-            f"❕ Продавец - @{seller_username} (ChatID <b><code>{deal.seller_id}</code></b>)\n"
-            f"💰 Сумма сделки - {deal.amount} рублей\n"
-            f"📊 Статус сделки - {deal.status}\n\nКто прав в данном споре?",
+            text=f"🧾 Информация о сделке "
+            + functions.format_deal_info(deal)
+            + f"\n\nКто прав в данном споре?",
             reply_markup=keyboards.solve_dispute,
             parse_mode="HTML",
         )
@@ -118,16 +116,17 @@ def search_seller_for_init(message):
     if second_user is None:
         return
 
+    queries.new_deal(message.chat.id, second_user.chat_id)
+
     bot.send_message(
         message.chat.id,
         "🧾 Профиль:\n\n"
-        f"❕ ChatID - <b><code>{second_user.chat_id}</code></b>\n"
-        f"❕ Имя пользователя - @{bot.get_chat(second_user.chat_id).username}\n"
-        f"❕ Проведенных сделок - {len(second_user.customer_offers) + len(second_user.seller_offers)}\n\n"
-        "🔥В этой сделке вы будете покупателем!",
-        reply_markup=keyboards.sentence_customer,
+        + functions.format_user_info(second_user)
+        + "\n\n🔥В этой сделке вы будете покупателем.",
+        reply_markup=keyboards.sentence_deal,
         parse_mode="HTML",
     )
+    bot.send_message(chat_id=message.chat.id, reply_markup=types.ReplyKeyboardRemove())
 
 
 def search_customer_for_init(message):
@@ -136,13 +135,14 @@ def search_customer_for_init(message):
     if second_user is None:
         return
 
+    queries.new_deal(second_user.chat_id, message.chat.id)
+
     bot.send_message(
         message.chat.id,
         "🧾 Профиль:\n\n"
-        f"❕ ChatID - <b><code>{second_user.chat_id}</code></b>\n"
-        f"❕ Имя пользователя - @{bot.get_chat(second_user.chat_id).username}\n"
-        f"❕ Проведенных сделок - {len(second_user.customer_offers) + len(second_user.seller_offers)}\n\n"
-        "🔥В этой сделке вы будете продавцом!",
-        reply_markup=keyboards.sentence_seller,
+        + functions.format_user_info(second_user)
+        + "\n\n🔥В этой сделке вы будете продавцом.",
+        reply_markup=keyboards.sentence_deal,
         parse_mode="HTML",
     )
+    bot.send_message(chat_id=message.chat.id, reply_markup=types.ReplyKeyboardRemove())

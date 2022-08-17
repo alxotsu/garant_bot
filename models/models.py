@@ -65,7 +65,8 @@ class Deal(Base, SaveDeleteModelMixin):
     __tablename__ = "deal"
 
     class Status(enum.Enum):
-        open = "Новая"
+        new = "Новая"
+        open = "Открыта"
         dispute = "Начат Спор"
         review = "Пишется отзыв"
         success = "Завершена"
@@ -76,7 +77,7 @@ class Deal(Base, SaveDeleteModelMixin):
     )
     seller_id = sql.Column(sql.Integer, sql.ForeignKey("user.chat_id"), nullable=False)
     amount = sql.Column(sql.DECIMAL, default=0, nullable=False)
-    status = sql.Column(sql.String, sql.Enum(Status), default=Status.open)
+    status = sql.Column(sql.Enum(Status), default=Status.open)
 
     customer = sql.orm.relationship(
         "User", back_populates="customer_deal", foreign_keys="Deal.customer_id"

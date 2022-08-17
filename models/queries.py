@@ -30,9 +30,21 @@ def get_deal(deal_id):
     return session.query(Deal).filter_by(id=deal_id).first()
 
 
+def new_deal(customer_chat_id, seller_chat_id):
+    deal = Deal(
+        customer_id=customer_chat_id, seller_id=seller_chat_id, status=Deal.Status.new
+    )
+    deal.save()
+    return deal
+
+
 def new_withdrawal(chat_id, metamask_address, amount):
     withdrawal = Withdrawal(
         user_id=chat_id, metamask_address=metamask_address, amount=amount
     )
     withdrawal.save()
     return withdrawal
+
+
+def get_reviews(chat_id):
+    return session.query(Review).filter_by(seller_id=chat_id).all()

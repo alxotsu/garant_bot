@@ -19,6 +19,10 @@ def search_second_user(message):
         bot.send_message(message.chat.id, text="Отмена...")
         return
 
+    if int(message.text) == message.chat.id:
+        bot.send_message(message.chat.id, text="⛔️Нельзя начать сделку с самим собой.")
+        return
+
     second_user = queries.get_user(int(message.text))
     if second_user is None:
         bot.send_message(
@@ -84,3 +88,24 @@ def solve_dispute(message, customer_solve):
         deal.seller.balance += deal.amount
         deal.seller.save()
     deal.delete()
+
+
+def format_user_info(user):
+    return (
+        f"❕ ChatID - <b><code>{user.chat_id}</code></b>\n"
+        f"❕ Имя пользователя - @{bot.get_chat(user.chat_id).username}\n"
+        f"❕ Проведенных сделок - {len(user.customer_offers) + len(user.seller_offers)}"
+    )
+
+
+def format_deal_info(deal):
+    seller_username = bot.get_chat(deal.seller.chat_id).username
+    customer_username = bot.get_chat(deal.customer.chat_id).username
+
+    return (
+        f"№{deal.id}\n"
+        f"❕ Покупатель - @{customer_username} (ChatID <b><code>{deal.customer_id}</code></b>)\n"
+        f"❕ Продавец - @{seller_username} (ChatID <b><code>{deal.seller_id}</code></b>)\n"
+        f"💰 Сумма сделки - {deal.amount} рублей\n"
+        f"📊 Статус сделки - {deal.status}"
+    )
