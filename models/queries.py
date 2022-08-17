@@ -26,6 +26,19 @@ def get_offers_count():
     return session.query(Offer).count()
 
 
+def new_offer(deal, review):
+    offer = Offer(
+        id=deal.id,
+        customer_id=deal.customer_id,
+        seller_id=deal.seller_id,
+        amount=deal.amount,
+        review=review,
+    )
+    offer.save()
+    deal.delete()
+    return offer
+
+
 def get_deal(deal_id):
     return session.query(Deal).filter_by(id=deal_id).first()
 

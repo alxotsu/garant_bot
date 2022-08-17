@@ -4,7 +4,7 @@ from app.bot import bot
 from app import functions
 from app import keyboards
 from app import config
-from models import queries
+from models import queries, Deal
 
 
 def ban_user(message):
@@ -170,3 +170,38 @@ def set_price(message):
         text=f"💥 Была изменена сумма сделки.\n\n💰 Сделка {functions.format_deal_info(deal)}",
         reply_markup=keyboards.seller_panel,
     )
+
+
+def add_review(message):
+    deal = queries.get_user(message.chat.id)
+    if deal.status != Deal.Status.review:
+        return
+
+    if message.text == "-":
+        bot.send_message(message.chat.id, text="Отмена...")
+        review = None
+        bot.send_message(
+            deal.seller_id,
+            text="❄️ Покупатель отказался оставлять отзыв.",
+            reply_markup=keyboards.menu,
+        )
+        bot.send_message(
+            chat_id=deal.customer_id,
+            text="❄️ Сделка успешно завершена!",
+            reply_markup=keyboards.menu,
+        )
+    else:
+        review = message.text
+
+    offer = queries.new_offer(deal, review)
+    if review is not None:
+        bot.send_message(
+            message.chat.id,
+            text="📝 Отзыв успешно оставлен.",
+            reply_markup=keyboards.menu,
+        )
+        bot.send_message(
+            offer.seller_id,
+            text=f"📝 О вас оставили отзыв!\n\n{message.text}",
+            reply_markup=keyboards.menu,
+        )

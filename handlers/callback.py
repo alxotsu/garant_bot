@@ -296,6 +296,8 @@ def callback_handler(call):
 
     user = queries.get_user(chat_id)
     deal = user.seller_deal or user.customer_deal
+    if deal.status != deal.Status.new:
+        return
     deal.status = Deal.Status.open
     deal.save()
 
@@ -397,6 +399,37 @@ def callback_handler(call):
         )
 
 
+@register_bot_callback_handler("confirm_confirm_fund")
+def callback_handler(call):
+    chat_id = call.message.chat.id
+
+    user = queries.get_user(chat_id)
+    deal = user.customer_deal
+
+    if deal.status == Deal.Status.success:
+        deal.seller.balance += deal.amount
+        deal.status = Deal.Status.review
+        deal.seller.save()
+        deal.save()
+
+        bot.send_message(
+            deal.customer_id,
+            text="✅ Сделка успешно завершена!\n" "📝 Хотите оставить отзыв о продавце?",
+            reply_markup=keyboards.add_review,
+        )
+        bot.send_message(
+            deal.seller_id,
+            text="✅ Сделка успешно завершена!\n"
+            "💰 Деньги зачислены на ваш счёт.\n\n"
+            "📝 Сейчас покупатель оставляет отзыв, подождите пожалуйста.",
+            reply_markup=keyboards.cancel_wait,
+        )
+    else:
+        bot.send_message(
+            chat_id, text="Вы не оплатили сделку, или над ней ведётся спор."
+        )
+
+
 @register_bot_callback_handler("close_deal")
 def callback_handler(call):
     chat_id = call.message.chat.id
@@ -405,6 +438,38 @@ def callback_handler(call):
         text="Вы уверены что хотите отменить сделку?",
         reply_markup=keyboards.choice_close_deal,
     )
+
+
+@register_bot_callback_handler("close_close_deal")
+def callback_handler(call):
+    chat_id = call.message.chat.id
+
+    user = queries.get_user(chat_id)
+    deal = user.seller_deal or user.customer_deal
+    if user.seller_deal:
+        role = "Продавец"
+        second_chat_id = deal.customer_id
+    else:
+        role = "Покупатель"
+        second_chat_id = deal.seller_id
+
+    if deal.status == Deal.Status.open:
+        bot.answer_callback_query(
+            callback_query_id=call.id,
+            show_alert=True,
+            text="Запрос на отмену отправлен.",
+        )
+        bot.send_message(
+            second_chat_id,
+            text=f"{role} предложил отменить сделку.",
+            reply_markup=keyboards.choice_accept_cancel,
+        )
+    else:
+        bot.answer_callback_query(
+            callback_query_id=call.id,
+            show_alert=True,
+            text="Сделка уже завершена или над ней проходит спор.",
+        )
 
 
 @register_bot_callback_handler("self_delete")
@@ -417,11 +482,6 @@ def callback_handler(call):
 @register_bot_callback_handler("pay")
 def callback_handler(call):
     chat_id = call.message.chat.id
-    bot.send_message(
-        chat_id,
-        text="Вы уверены что хотите отменить сделку?",
-        reply_markup=keyboards.choice_close_deal,
-    )
 
     user = queries.get_user(chat_id)
     deal = user.customer_deal
@@ -458,9 +518,89 @@ def callback_handler(call):
 
     bot.send_message(
         deal.seller_id,
-        text="✅ Покупатель оплатил товар! Теперь Вам необходимо передать товар.",
+        text="✅ Покупатель оплатил сделку! Теперь Вам необходимо передать товар.",
     )
     bot.send_message(
         deal.customer_id,
         text="✅ Товар был успешно оплачен, ожидайте получения товара. Если товар оказался не валид, или продавец Вас кинул в ЧС, откройте спор.",
     )
+
+
+@register_bot_callback_handler("add_review")
+def callback_handler(call):
+    chat_id = call.message.chat.id
+
+    user = queries.get_user(chat_id)
+    deal = user.seller_deal
+    if deal.status != Deal.Status.review:
+        return
+
+    msg = bot.send_message(
+        chat_id, text='🔥 Напишите отзыв о сделке, для отмены вышлите "-" без кавычек.'
+    )
+    bot.register_next_step_handler(msg, next_step_hadlers.add_review)
+
+
+@register_bot_callback_handler("no_review")
+def callback_handler(call):
+    chat_id = call.message.chat.id
+    message_id = call.message.message_id
+
+    user = queries.get_user(chat_id)
+    deal = user.seller_deal or user.customer_deal
+    if deal.status != Deal.Status.review:
+        return
+
+    if user.seller_deal:
+        second_chat_id = deal.customer_id
+        bot.send_message(
+            second_chat_id,
+            text="❄️ Продавец не захотел ожидать отзыва. Сделка заверешна.",
+            reply_markup=keyboards.menu,
+        )
+        bot.edit_message_text(
+            chat_id=chat_id,
+            message_id=message_id,
+            text="❄️Ожидание отменено, покупатель не может больше оставить отзыв.",
+            reply_markup=keyboards.menu,
+        )
+    else:
+        second_chat_id = deal.seller_id
+        bot.send_message(
+            second_chat_id,
+            text="❄️ Покупатель отказался оставлять отзыв.",
+            reply_markup=keyboards.menu,
+        )
+        bot.edit_message_text(
+            chat_id=chat_id,
+            message_id=message_id,
+            text="❄️ Сделка успешно завершена!",
+            reply_markup=keyboards.menu,
+        )
+
+    queries.new_offer(deal, None)
+
+
+@register_bot_callback_handler("accept_close")
+def callback_handler(call):
+    chat_id = call.message.chat.id
+
+    user = queries.get_user(chat_id)
+    deal = user.seller_deal or user.customer_deal
+
+    if deal.status == Deal.Status.open:
+        bot.send_message(deal.customer_id, text='✅ Сделка успешно отменена.', reply_markup=keyboards.menu)
+        bot.send_message(deal.seller_id, text='✅ Сделка успешно отменена.', reply_markup=keyboards.menu)
+        deal.delete()
+    else:
+        bot.answer_callback_query(callback_query_id=call.id, show_alert=True, text='✅ Сделка уже завершена или над ней проходит спор.')
+
+
+@register_bot_callback_handler("refuse_close")
+def callback_handler(call):
+    chat_id = call.message.chat.id
+    user = queries.get_user(chat_id)
+    deal = user.seller_deal or user.customer_deal
+
+    bot.send_message(deal.customer_id, text='✅ Процесс отмены сделки аннулирован.')
+    bot.send_message(deal.seller_id, text='✅ Процесс отмены сделки аннулирован.')
