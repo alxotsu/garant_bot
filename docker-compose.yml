@@ -20,8 +20,6 @@ services:
   bot:
     build:
       context: .
-    volumes:
-      - ./:/bot
     command: bash -c "
         python main.py
       "

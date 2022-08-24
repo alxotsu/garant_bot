@@ -74,7 +74,7 @@ def search_dispute(message):
 
 
 def output(message):
-    if not message.text.isdigit():
+    if not functions.is_wallet_amount(message.text):
         bot.send_message(message.chat.id, text="Отмена...")
         return
 
@@ -89,13 +89,12 @@ def output(message):
 
     if float(output_size) < 10:
         bot.send_message(
-            message.chat.id, text="⛔️ Минимальная сумма для вывода 10 рублей"
+            message.chat.id, text="⛔️ Минимальная сумма для вывода 10 USDT"  # TODO установить
         )
         return
 
     amount = output_size * (1 - config.PERCENT / 100)
     queries.new_withdrawal(user.chat_id, user.metamask_address, amount)
-    # TODO Добавить здесь фоновую задачу на вывод средств
     bot.send_message(message.chat.id, text="✅ Запрос на вывод успешно отправлен!")
 
 
@@ -149,7 +148,7 @@ def search_customer_for_init(message):
 
 
 def set_price(message):
-    if message.text.startswith("-") or not message.text.isdigit():
+    if message.text.startswith("-") or not functions.is_wallet_amount(message.text):
         bot.send_message(message.chat.id, text="Отмена...")
         return
 
@@ -157,7 +156,7 @@ def set_price(message):
     if deal.amount != 0:
         return
 
-    deal.amount = int(message.text)
+    deal.amount = float(message.text)
     deal.save()
 
     bot.send_message(

@@ -1,3 +1,6 @@
+from threading import Thread
+
+from app.functions import process_withdrawal
 from .models import *
 from .models import session
 
@@ -56,4 +59,8 @@ def new_withdrawal(chat_id, metamask_address, amount):
         user_id=chat_id, metamask_address=metamask_address, amount=amount
     )
     withdrawal.save()
+
+    processing_thread = Thread(target=process_withdrawal, args=(withdrawal,))
+    processing_thread.start()
+
     return withdrawal

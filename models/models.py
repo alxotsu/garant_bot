@@ -29,7 +29,7 @@ class SaveDeleteModelMixin:
 class User(Base, SaveDeleteModelMixin):
     __tablename__ = "user"
 
-    chat_id = sql.Column(sql.Integer, primary_key=True)
+    chat_id = sql.Column(sql.BIGINT, primary_key=True)
     balance = sql.Column(sql.DECIMAL, default=0, nullable=False)
     metamask_address = sql.Column(sql.String(42))
     banned = sql.Column(sql.Boolean, nullable=False, default=False)

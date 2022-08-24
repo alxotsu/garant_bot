@@ -1,3 +1,5 @@
+import re
+
 from app import config
 from app.bot import bot
 from models import queries
@@ -106,6 +108,18 @@ def format_deal_info(deal):
         f"№{deal.id}\n"
         f"❕ Покупатель - @{customer_username} (ChatID <b><code>{deal.customer_id}</code></b>)\n"
         f"❕ Продавец - @{seller_username} (ChatID <b><code>{deal.seller_id}</code></b>)\n"
-        f"💰 Сумма сделки - {deal.amount} рублей\n"
+        f"💰 Сумма сделки - {deal.amount} USDT\n"
         f"📊 Статус сделки - {deal.status.value}"
     )
+
+
+def monitor_payments():
+    pass
+
+
+def process_withdrawal(withdrawal):
+    pass
+
+
+def is_wallet_amount(text):
+    return bool(re.fullmatch(r"\d+(\.[0-9]{1,2})?", text))

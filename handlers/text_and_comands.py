@@ -62,7 +62,7 @@ def send_text(message):
                 f"🧾 Профиль:\n\n"
                 f"❕ Ваш ChatID - <b><code>{user.chat_id}</code></b>\n"
                 f"❕ Проведенных сделок - {len(user.customer_offers) + len(user.seller_offers)}\n\n"
-                f"💰 Ваш баланс - {user.balance} рублей\n"
+                f"💰 Ваш баланс - {user.balance} USDT\n"
                 f"💳 Ваш адрес Metamask - {user.metamask_address if user.metamask_address is not None else 'Не указан'}",
                 reply_markup=keyboards.profile,
                 parse_mode="HTML",

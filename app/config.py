@@ -9,7 +9,11 @@ INSTRUCTION = environ["INSTRUCTION_LINK"]
 ADMIN_USERNAME = environ["ADMIN_USERNAME"]
 PERCENT = int(environ["PERCENT"])
 METAMASK_ADDRESS = environ["METAMASK_ADDRESS"]
-QIWI_TOKEN = environ["QIWI_TOKEN"]
+METAMASK_PRIVATE_KEY = environ["METAMASK_PRIVATE_KEY"]
+METAMASK_NETWORK_LINK = environ.setdefault("METAMASK_NETWORK_LINK", "https://mainnet.infura.io/v3/")
+MONITOR_PAYMENTS_TIME_INTERVAL = int(environ.setdefault("MONITOR_PAYMENTS_TIME_INTERVAL", "5"))
+TOKEN_ADDRESS = environ.setdefault("TOKEN_ADDRESS", "0x55d398326f99059ff775485246999027b3197955")
+
 
 if PERCENT >= 100:
     raise Exception("Комиссия за вывод не может быть выше 100%")

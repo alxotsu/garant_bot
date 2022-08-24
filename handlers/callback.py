@@ -35,7 +35,7 @@ def callback_handler(call):
             chat_id=chat_id,
             message_id=message_id,
             text=f"Ваш адрес Metamask - {user.metamask_address}\n"
-            f"Баланс - {user.balance} рублей\n"
+            f"Баланс - {user.balance} USDT\n"
             f"Введите сумму для вывода. (Для отмены введите любую букву)",
         )
         bot.register_next_step_handler(msg, next_step_hadlers.output)
@@ -114,7 +114,7 @@ def callback_handler(call):
     text = ""
     for offer in user.seller_offers:
         username = bot.get_chat(offer.customer_id).username
-        text += f"💠 C @{username} (ChatID - {offer.customer_id}) на сумму {offer.amount} рублей.\n\n"
+        text += f"💠 C @{username} (ChatID - {offer.customer_id}) на сумму {offer.amount} USDT.\n\n"
 
     bot.send_message(chat_id, text=text)
 
@@ -131,7 +131,7 @@ def callback_handler(call):
     text = ""
     for offer in user.customer_offers:
         username = bot.get_chat(offer.seller_id).username
-        text += f"💠 C @{username} (ChatID - {offer.seller_id}) на сумму {offer.amount} рублей.\n\n"
+        text += f"💠 C @{username} (ChatID - {offer.seller_id}) на сумму {offer.amount} USDT.\n\n"
 
     bot.send_message(chat_id, text=text)
 
@@ -504,8 +504,8 @@ def callback_handler(call):
         bot.send_message(
             chat_id,
             text="📉 Вам необходимо пополнить баланс!\n"
-            f"💰 Ваш баланс - {user.balance} рублей\n"
-            f"💳 Необходимый баланс - {deal.amount} рублей\n\n"
+            f"💰 Ваш баланс - {user.balance} USDT\n"
+            f"💳 Необходимый баланс - {deal.amount} USDT\n\n"
             f"Если Вы указали в своём профиле адрес Metamask кошелька, Вы можете выполнить перевод на <b><code>{config.METAMASK_ADDRESS}</code></b>, средства зачислятся автоматически.\n"
             "В противном случае Вам необходимо отменить сделку для привязки кошелька к профилю.",
             parse_mode="HTML",
