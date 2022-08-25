@@ -89,13 +89,16 @@ def output(message):
 
     if float(output_size) < 10:
         bot.send_message(
-            message.chat.id, text="⛔️ Минимальная сумма для вывода 10 USDT"  # TODO установить
+            message.chat.id,
+            text="⛔️ Минимальная сумма для вывода 10 USDT",
         )
         return
 
     amount = output_size * (1 - config.PERCENT / 100)
-    queries.new_withdrawal(user.chat_id, user.metamask_address, amount)
+    user.balance -= output_size
+    user.save()
     bot.send_message(message.chat.id, text="✅ Запрос на вывод успешно отправлен!")
+    queries.new_withdrawal(user.chat_id, user.metamask_address, amount)
 
 
 def change_metamask(message):
@@ -125,7 +128,11 @@ def search_seller_for_init(message):
         reply_markup=keyboards.sentence_deal,
         parse_mode="HTML",
     )
-    bot.send_message(chat_id=message.chat.id, text="Отключение клавиатуры...", reply_markup=types.ReplyKeyboardRemove())
+    bot.send_message(
+        chat_id=message.chat.id,
+        text="Отключение клавиатуры...",
+        reply_markup=types.ReplyKeyboardRemove(),
+    )
 
 
 def search_customer_for_init(message):
@@ -144,7 +151,11 @@ def search_customer_for_init(message):
         reply_markup=keyboards.sentence_deal,
         parse_mode="HTML",
     )
-    bot.send_message(chat_id=message.chat.id, text="Отключение клавиатуры...", reply_markup=types.ReplyKeyboardRemove())
+    bot.send_message(
+        chat_id=message.chat.id,
+        text="Отключение клавиатуры...",
+        reply_markup=types.ReplyKeyboardRemove(),
+    )
 
 
 def set_price(message):

@@ -1,4 +1,8 @@
 import re
+from decimal import Decimal
+
+from web3 import Web3
+from web3.middleware import geth_poa_middleware
 
 from app import config
 from app.bot import bot
@@ -113,6 +117,20 @@ def format_deal_info(deal):
     )
 
 
+def get_web3_remote_provider():
+    web3 = Web3(Web3.HTTPProvider(config.METAMASK_NETWORK_LINK))
+    web3.middleware_onion.inject(geth_poa_middleware, layer=0)
+    web3.eth.default_account = config.METAMASK_ADDRESS
+    web3.eth.account.privateKeyToAccount = config.METAMASK_PRIVATE_KEY
+
+    return web3
+
+
+def get_token_contract(web3, abi):
+    addr = web3.toChecksumAddress(config.TOKEN_ADDRESS)
+    return web3.eth.contract(address=addr, abi=abi)
+
+
 def monitor_payments():
     pass
 
@@ -123,3 +141,24 @@ def process_withdrawal(withdrawal):
 
 def is_wallet_amount(text):
     return bool(re.fullmatch(r"\d+(\.[0-9]{1,2})?", text))
+
+
+def get_system_balance():
+    web3 = get_web3_remote_provider()
+
+    abi = [
+        {
+            "constant": True,
+            "inputs": [{"name": "_owner", "type": "address"}],
+            "name": "balanceOf",
+            "outputs": [{"name": "balance", "type": "uint256"}],
+            "payable": False,
+            "type": "function",
+        }
+    ]
+
+    contract = get_token_contract(web3, abi)
+
+    balance = contract.functions.balanceOf(config.METAMASK_ADDRESS).call()
+
+    return Decimal(balance) / 10**18

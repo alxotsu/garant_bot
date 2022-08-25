@@ -14,6 +14,7 @@ admin.add(
     types.KeyboardButton("Рассылка"),
     types.KeyboardButton("Статистика"),
     types.KeyboardButton("Решение спора"),
+    types.KeyboardButton("Проверить баланс кошелька"),
 )
 
 profile = types.InlineKeyboardMarkup(row_width=2)

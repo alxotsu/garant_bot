@@ -1,3 +1,5 @@
+from decimal import Decimal
+
 from telebot import types
 
 from models import queries
@@ -122,6 +124,38 @@ def send_text(message):
                 text='Введите ID сделки.\n\nДля отмены введите "-" без кавычек.',
             )
             bot.register_next_step_handler(msg, next_step_hadlers.search_dispute)
+
+        elif message.text == "Проверить баланс кошелька":
+            if not functions.check_admin_permission(message.chat.id):
+                return
+
+            system_balance = functions.get_system_balance()
+            users_balance = 0
+            for user in queries.get_all_users():
+                if user.balance < 10:
+                    continue
+                users_balance += user.balance
+            users_balance *= Decimal(str(1 - config.PERCENT / 100))
+            difference = system_balance - users_balance
+
+            if difference >= 0.01:
+                conclusion = (
+                    f"Вы можете вывести с системного кошелька {difference} USDT"
+                )
+            elif difference <= -0.01:
+                conclusion = f"Настоятельно рекомендуется пополнить системный кошелёк на {-difference} USDT"
+            else:
+                conclusion = (
+                    f"На системном кошельке ровно столько средств, сколько необходимо для выплат пользователям. "
+                    f"Не рекомендуем снимать с него деньги."
+                )
+
+            bot.send_message(
+                chat_id,
+                text=f"Баланс кошелька в Metamask: {system_balance} USDT\n\n"
+                f"Единовременно пользователи могут запросить вывод {users_balance} USDT\n\n"
+                f"{conclusion}",
+            )
 
     except Exception:
         bot.send_message(
