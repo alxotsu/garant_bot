@@ -1,5 +1,6 @@
 import re
 from decimal import Decimal
+from datetime import datetime
 
 from web3 import Web3
 from web3.middleware import geth_poa_middleware
@@ -121,7 +122,6 @@ def get_web3_remote_provider():
     web3 = Web3(Web3.HTTPProvider(config.METAMASK_NETWORK_LINK))
     web3.middleware_onion.inject(geth_poa_middleware, layer=0)
     web3.eth.default_account = config.METAMASK_ADDRESS
-    web3.eth.account.privateKeyToAccount = config.METAMASK_PRIVATE_KEY
 
     return web3
 
@@ -136,7 +136,57 @@ def monitor_payments():
 
 
 def process_withdrawal(withdrawal):
-    pass
+    web3 = get_web3_remote_provider()
+    abi = [
+        {
+            "constant": False,
+            "inputs": [
+                {"name": "_to", "type": "address"},
+                {"name": "_value", "type": "uint256"},
+            ],
+            "name": "transfer",
+            "outputs": [{"name": "", "type": "bool"}],
+            "type": "function",
+        }
+    ]
+    contract = get_token_contract(web3, abi)
+
+    try:
+        assert withdrawal.amount < get_system_balance()
+
+        amount = int(withdrawal.amount * Decimal(str(1 - config.PERCENT / 100)) * 10 ** 18)
+
+        transfer = contract.functions.transfer(
+            withdrawal.metamask_address, amount
+        ).buildTransaction(
+            {
+                "chainId": 56,
+                "gas": 55000,
+                "gasPrice": web3.eth.gasPrice,
+                "nonce": web3.eth.getTransactionCount(config.METAMASK_ADDRESS),
+            }
+        )
+        account = web3.eth.account.privateKeyToAccount(config.METAMASK_PRIVATE_KEY)
+        signed_transfer = account.signTransaction(transfer)
+        sent_transfer = web3.eth.sendRawTransaction(signed_transfer.rawTransaction)
+
+        withdrawal.passed = True
+        withdrawal.close_time = datetime.utcnow()
+        withdrawal.save()
+
+        bot.send_message(withdrawal.user_id, f"{withdrawal.amount} USDT было выведено на кошелёк - "
+                                             f"<b><code>{withdrawal.metamask_address}</code></b>\n\n"
+                                             f"Хэш транзакции - <b><code>{sent_transfer.hex()}</code></b>", parse_mode="HTML")
+
+    except:
+        withdrawal.user.balance += withdrawal.amount
+        withdrawal.user.save()
+        withdrawal.passed = False
+        withdrawal.close_time = datetime.utcnow()
+        withdrawal.save()
+        bot.send_message(withdrawal.user_id, f"Вывод {withdrawal.amount} USDT не удался."
+                                             " Проверьте правильность введённого адреса кошелька"
+                                             " Metamask в своём профиле и повторите попытку.")
 
 
 def is_wallet_amount(text):

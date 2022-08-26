@@ -31,7 +31,7 @@ def start(message: types.Message):
 
 
 @bot.message_handler(commands=["admin"])
-def start(message: types.Message):
+def admin(message: types.Message):
     if functions.check_admin_permission(message.chat.id):
 
         user = queries.get_user(message.chat.id)

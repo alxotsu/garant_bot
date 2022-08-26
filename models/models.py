@@ -108,5 +108,6 @@ class Withdrawal(Base, SaveDeleteModelMixin):
     amount = sql.Column(sql.DECIMAL, default=0, nullable=False)
     create_time = sql.Column(sql.DateTime, default=datetime.datetime.utcnow)
     close_time = sql.Column(sql.DateTime)
+    passed = sql.Column(sql.Boolean)
 
     user = sql.orm.relationship("User", back_populates="withdrawals")

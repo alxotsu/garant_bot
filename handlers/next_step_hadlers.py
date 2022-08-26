@@ -1,9 +1,10 @@
+from decimal import Decimal
+
 from telebot import types
 
 from app.bot import bot
 from app import functions
 from app import keyboards
-from app import config
 from models import queries, Deal
 
 
@@ -79,7 +80,7 @@ def output(message):
         return
 
     user = queries.get_user(message.chat.id)
-    output_size = float(message.text)
+    output_size = Decimal(message.text)
 
     if output_size > user.balance:
         bot.send_message(
@@ -87,18 +88,17 @@ def output(message):
         )
         return
 
-    if float(output_size) < 10:
+    if float(output_size) < 1:
         bot.send_message(
             message.chat.id,
-            text="⛔️ Минимальная сумма для вывода 10 USDT",
+            text="⛔️ Минимальная сумма для вывода 1 USDT",
         )
         return
 
-    amount = output_size * (1 - config.PERCENT / 100)
     user.balance -= output_size
     user.save()
     bot.send_message(message.chat.id, text="✅ Запрос на вывод успешно отправлен!")
-    queries.new_withdrawal(user.chat_id, user.metamask_address, amount)
+    queries.new_withdrawal(user.chat_id, user.metamask_address, output_size)
 
 
 def change_metamask(message):
