@@ -8,7 +8,7 @@ from sqlalchemy.orm import sessionmaker
 
 from app.config import DATABASE_URL
 
-__all__ = ["User", "Deal", "Offer", "Withdrawal"]
+__all__ = ["User", "Deal", "Offer", "Withdrawal", "Transaction"]
 
 engine = create_engine(DATABASE_URL)
 Base = declarative_base(bind=engine)
@@ -52,6 +52,7 @@ class User(Base, SaveDeleteModelMixin):
     )
 
     withdrawals = sql.orm.relationship("Withdrawal", back_populates="user")
+    transactions = sql.orm.relationship("Transaction", back_populates="user")
 
 
 class Deal(Base, SaveDeleteModelMixin):
@@ -111,3 +112,13 @@ class Withdrawal(Base, SaveDeleteModelMixin):
     passed = sql.Column(sql.Boolean)
 
     user = sql.orm.relationship("User", back_populates="withdrawals")
+
+
+class Transaction(Base, SaveDeleteModelMixin):
+    __tablename__ = "transaction"
+
+    hash = sql.Column(sql.String(64), primary_key=True)
+    user_id = sql.Column(sql.Integer, sql.ForeignKey("user.chat_id"), nullable=False)
+    amount = sql.Column(sql.DECIMAL, nullable=False)
+
+    user = sql.orm.relationship("User", back_populates="transactions")

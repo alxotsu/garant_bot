@@ -45,25 +45,18 @@ def callback_handler(call):
 def callback_handler(call):
     chat_id = call.message.chat.id
     message_id = call.message.message_id
-    user = queries.get_user(chat_id)
-    if user.metamask_address is None:
-        bot.edit_message_text(
-            chat_id=chat_id,
-            message_id=message_id,
-            text="⛔️ Вы должны указать адрес кошелька перед пополнением баланса.",
-            reply_markup=keyboards.change_metamask,
-        )
-    else:
-        bot.edit_message_text(
-            chat_id=chat_id,
-            message_id=message_id,
-            text="⚠️ Пополнение баланса\n"
-            "Чтобы пополнить баланс, отправьте желаемую сумму на кошелёк сервиса в Metamask.\n"
-            "Ваш баланс будет пополнен автоматически.\n\n"
-            f"👉 Адрес кошелька - <b><code>{config.METAMASK_ADDRESS}</code></b>\n\n"
-            "⛔️Обратите внимание! Перевод должен осуществляться с того же кошелька, адрес которого указан в вашем профиле, иначе средства не зачислятся.",
-            parse_mode="HTML",
-        )
+
+    msg = bot.edit_message_text(
+        chat_id=chat_id,
+        message_id=message_id,
+        text="⚠️ Пополнение баланса\n"
+        "Чтобы пополнить баланс, отправьте желаемую сумму на кошелёк сервиса в Metamask.\n"
+        "После этого Вам нужно скопировать ID транзакции и вставить его здесь.\n\n"
+        f"👉 Адрес кошелька - <b><code>{config.METAMASK_ADDRESS}</code></b>\n\n"
+        'Для отмены напишите "-" без кавычек.',
+        parse_mode="HTML",
+    )
+    bot.register_next_step_handler(msg, next_step_hadlers.register_transaction_hash)
 
 
 @register_bot_callback_handler("change_metamask")

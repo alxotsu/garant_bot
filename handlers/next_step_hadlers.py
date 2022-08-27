@@ -1,9 +1,11 @@
 from decimal import Decimal
 
 from telebot import types
+from web3.exceptions import TransactionNotFound
 
 from app.bot import bot
 from app import functions
+from app import config
 from app import keyboards
 from models import queries, Deal
 
@@ -101,6 +103,57 @@ def output(message):
     queries.new_withdrawal(user.chat_id, user.metamask_address, output_size)
 
 
+def register_transaction_hash(message):
+    if message.text.startswith("-"):
+        bot.send_message(message.chat.id, text="Отмена...")
+        return
+
+    hash_str = message.text[2:]
+
+    if queries.get_transaction(hash_str) is not None:
+        bot.send_message(
+            message.chat.id, text="Эта транзакция уже была зарегистрирована в боте."
+        )
+        return
+
+    web3 = functions.get_web3_remote_provider()
+    try:
+        transaction = web3.eth.get_transaction(bytes.fromhex(hash_str))
+    except TransactionNotFound:
+        bot.send_message(message.chat.id, text="Транзакция с таким ID не найдена.")
+        return
+
+    abi = [
+        {
+            "constant": False,
+            "inputs": [
+                {"name": "to", "type": "address"},
+                {"name": "value", "type": "uint256"},
+            ],
+            "name": "transfer",
+            "outputs": [{"name": "", "type": "bool"}],
+            "type": "function",
+        }
+    ]
+    contract = functions.get_token_contract(web3, abi)
+    transaction_info = contract.decode_function_input(transaction.input)[1]
+
+    if transaction_info["to"] != config.METAMASK_ADDRESS:
+        bot.send_message(
+            message.chat.id, text="Перевод был совершён не на кошелёк сервиса."
+        )
+        return
+
+    user = queries.get_user(message.chat.id)
+    amount = Decimal(str(transaction_info["value"] / 10**18))
+    queries.new_transaction(hash_str, user.chat_id, amount)
+    user.balance += amount
+    user.save()
+    bot.send_message(
+        message.chat.id, text=f"Баланс был успешно пополнен на {amount} USDT."
+    )
+
+
 def change_metamask(message):
     if message.text.startswith("-"):
         bot.send_message(message.chat.id, text="Отмена...")
@@ -174,13 +227,13 @@ def set_price(message):
         deal.seller_id,
         text=f"💥 Сумма сделки успешно изменена.\n\n💰 Сделка {functions.format_deal_info(deal)}",
         reply_markup=keyboards.seller_panel,
-        parse_mode="HTML"
+        parse_mode="HTML",
     )
     bot.send_message(
         deal.customer_id,
         text=f"💥 Была изменена сумма сделки.\n\n💰 Сделка {functions.format_deal_info(deal)}",
         reply_markup=keyboards.customer_panel,
-        parse_mode="HTML"
+        parse_mode="HTML",
     )
 
 

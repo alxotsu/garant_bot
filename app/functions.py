@@ -131,10 +131,6 @@ def get_token_contract(web3, abi):
     return web3.eth.contract(address=addr, abi=abi)
 
 
-def monitor_payments():
-    pass
-
-
 def process_withdrawal(withdrawal):
     web3 = get_web3_remote_provider()
     abi = [
@@ -154,14 +150,16 @@ def process_withdrawal(withdrawal):
     try:
         assert withdrawal.amount < get_system_balance()
 
-        amount = int(withdrawal.amount * Decimal(str(1 - config.PERCENT / 100)) * 10 ** 18)
+        amount = int(
+            withdrawal.amount * Decimal(str(1 - config.PERCENT / 100)) * 10**18
+        )
 
         transfer = contract.functions.transfer(
             withdrawal.metamask_address, amount
         ).buildTransaction(
             {
                 "chainId": 56,
-                "gas": 55000,
+                "gas": config.GAS_COUNT,
                 "gasPrice": web3.eth.gasPrice,
                 "nonce": web3.eth.getTransactionCount(config.METAMASK_ADDRESS),
             }
@@ -174,9 +172,13 @@ def process_withdrawal(withdrawal):
         withdrawal.close_time = datetime.utcnow()
         withdrawal.save()
 
-        bot.send_message(withdrawal.user_id, f"{withdrawal.amount} USDT было выведено на кошелёк - "
-                                             f"<b><code>{withdrawal.metamask_address}</code></b>\n\n"
-                                             f"Хэш транзакции - <b><code>{sent_transfer.hex()}</code></b>", parse_mode="HTML")
+        bot.send_message(
+            withdrawal.user_id,
+            f"{withdrawal.amount} USDT было выведено на кошелёк - "
+            f"<b><code>{withdrawal.metamask_address}</code></b>\n\n"
+            f"Хэш транзакции - <b><code>{sent_transfer.hex()}</code></b>",
+            parse_mode="HTML",
+        )
 
     except:
         withdrawal.user.balance += withdrawal.amount
@@ -184,9 +186,12 @@ def process_withdrawal(withdrawal):
         withdrawal.passed = False
         withdrawal.close_time = datetime.utcnow()
         withdrawal.save()
-        bot.send_message(withdrawal.user_id, f"Вывод {withdrawal.amount} USDT не удался."
-                                             " Проверьте правильность введённого адреса кошелька"
-                                             " Metamask в своём профиле и повторите попытку.")
+        bot.send_message(
+            withdrawal.user_id,
+            f"Вывод {withdrawal.amount} USDT не удался."
+            " Проверьте правильность введённого адреса кошелька"
+            " Metamask в своём профиле и повторите попытку.",
+        )
 
 
 def is_wallet_amount(text):

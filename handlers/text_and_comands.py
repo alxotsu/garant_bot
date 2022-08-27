@@ -132,7 +132,7 @@ def send_text(message):
             system_balance = functions.get_system_balance()
             users_balance = 0
             for user in queries.get_all_users():
-                if user.balance < 10:
+                if user.balance < 1:
                     continue
                 users_balance += user.balance
             users_balance *= Decimal(str(1 - config.PERCENT / 100))

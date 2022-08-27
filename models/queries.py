@@ -64,3 +64,14 @@ def new_withdrawal(chat_id, metamask_address, amount):
     processing_thread.start()
 
     return withdrawal
+
+
+def new_transaction(hash_str, chat_id, amount):
+    transaction = Transaction(user_id=chat_id, hash=hash_str, amount=amount)
+    transaction.save()
+
+    return transaction
+
+
+def get_transaction(hash_str):
+    return session.query(Transaction).filter_by(hash=hash_str).first()
