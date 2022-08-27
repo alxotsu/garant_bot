@@ -195,7 +195,7 @@ def process_withdrawal(withdrawal):
 
 
 def is_wallet_amount(text):
-    return bool(re.fullmatch(r"\d+(\.[0-9]{1,2})?", text))
+    return bool(re.fullmatch(r"\d+(\.\d+)?", text))
 
 
 def get_system_balance():
