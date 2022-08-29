@@ -31,7 +31,7 @@ class User(Base, SaveDeleteModelMixin):
 
     chat_id = sql.Column(sql.BIGINT, primary_key=True)
     balance = sql.Column(sql.DECIMAL, default=0, nullable=False)
-    metamask_address = sql.Column(sql.String(42))
+    metamask_address = sql.Column(sql.String(64))
     banned = sql.Column(sql.Boolean, nullable=False, default=False)
 
     customer_deal = sql.orm.relationship(
@@ -67,9 +67,9 @@ class Deal(Base, SaveDeleteModelMixin):
 
     id = sql.Column(sql.Integer, primary_key=True)
     customer_id = sql.Column(
-        sql.Integer, sql.ForeignKey("user.chat_id"), nullable=False
+        sql.BIGINT, sql.ForeignKey("user.chat_id"), nullable=False
     )
-    seller_id = sql.Column(sql.Integer, sql.ForeignKey("user.chat_id"), nullable=False)
+    seller_id = sql.Column(sql.BIGINT, sql.ForeignKey("user.chat_id"), nullable=False)
     amount = sql.Column(sql.DECIMAL, default=0, nullable=False)
     status = sql.Column(sql.Enum(Status), default=Status.open)
 
@@ -86,9 +86,9 @@ class Offer(Base, SaveDeleteModelMixin):
 
     id = sql.Column(sql.Integer, primary_key=True)
     customer_id = sql.Column(
-        sql.Integer, sql.ForeignKey("user.chat_id"), primary_key=True
+        sql.BIGINT, sql.ForeignKey("user.chat_id"), primary_key=True
     )
-    seller_id = sql.Column(sql.Integer, sql.ForeignKey("user.chat_id"), nullable=False)
+    seller_id = sql.Column(sql.BIGINT, sql.ForeignKey("user.chat_id"), nullable=False)
     amount = sql.Column(sql.DECIMAL, default=0, nullable=False)
     review = sql.Column(sql.String(1024))
 
@@ -104,8 +104,8 @@ class Withdrawal(Base, SaveDeleteModelMixin):
     __tablename__ = "withdrawal"
 
     id = sql.Column(sql.Integer, primary_key=True)
-    user_id = sql.Column(sql.Integer, sql.ForeignKey("user.chat_id"), nullable=False)
-    metamask_address = sql.Column(sql.String(42), nullable=False)
+    user_id = sql.Column(sql.BIGINT, sql.ForeignKey("user.chat_id"), nullable=False)
+    metamask_address = sql.Column(sql.String(64), nullable=False)
     amount = sql.Column(sql.DECIMAL, default=0, nullable=False)
     create_time = sql.Column(sql.DateTime, default=datetime.datetime.utcnow)
     close_time = sql.Column(sql.DateTime)
@@ -118,7 +118,7 @@ class Transaction(Base, SaveDeleteModelMixin):
     __tablename__ = "transaction"
 
     hash = sql.Column(sql.String(64), primary_key=True)
-    user_id = sql.Column(sql.Integer, sql.ForeignKey("user.chat_id"), nullable=False)
+    user_id = sql.Column(sql.BIGINT, sql.ForeignKey("user.chat_id"), nullable=False)
     amount = sql.Column(sql.DECIMAL, nullable=False)
 
     user = sql.orm.relationship("User", back_populates="transactions")
