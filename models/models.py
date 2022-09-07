@@ -86,7 +86,7 @@ class Offer(Base, SaveDeleteModelMixin):
 
     id = sql.Column(sql.Integer, primary_key=True)
     customer_id = sql.Column(
-        sql.BIGINT, sql.ForeignKey("user.chat_id"), primary_key=True
+        sql.BIGINT, sql.ForeignKey("user.chat_id"), nullable=False
     )
     seller_id = sql.Column(sql.BIGINT, sql.ForeignKey("user.chat_id"), nullable=False)
     amount = sql.Column(sql.DECIMAL, default=0, nullable=False)
