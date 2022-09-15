@@ -138,7 +138,7 @@ def register_transaction_hash(message):
     contract = functions.get_token_contract(web3, abi)
     transaction_info = contract.decode_function_input(transaction.input)[1]
 
-    if transaction_info["to"] != config.METAMASK_ADDRESS:
+    if transaction_info["to"] != config.SYSTEM_WALLET_ADDRESS:
         bot.send_message(
             message.chat.id, text="Перевод был совершён не на кошелёк сервиса."
         )

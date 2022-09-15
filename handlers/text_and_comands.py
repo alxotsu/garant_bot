@@ -78,7 +78,7 @@ def send_text(message):
         elif message.text.lower() == "⭐️ о нас":
             bot.send_message(
                 chat_id,
-                f"По всем вопросам: @{config.ADMIN_USERNAME}\nНаш чат: {config.BOT_CHAT_LINK}\nИнструкция по использованию: {config.INSTRUCTION}",
+                f"По всем вопросам: @{config.ADMIN_USERNAME}\nНаш чат: {config.BOT_CHAT_LINK}\nИнструкция по использованию: {config.INSTRUCTION_LINK}",
             )
 
         elif message.text.lower() == "💵 прошедшие сделки":
@@ -135,7 +135,7 @@ def send_text(message):
                 if user.balance < 1:
                     continue
                 users_balance += user.balance
-            users_balance *= Decimal(str(1 - config.PERCENT / 100))
+            users_balance *= Decimal(str(1 - config.TAX_PERCENT / 100))
             difference = system_balance - users_balance
 
             if difference >= 0.01:

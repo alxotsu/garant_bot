@@ -119,15 +119,15 @@ def format_deal_info(deal):
 
 
 def get_web3_remote_provider():
-    web3 = Web3(Web3.HTTPProvider(config.METAMASK_NETWORK_LINK))
+    web3 = Web3(Web3.HTTPProvider(config.BLOCKCHAIN_RPC_LINK))
     web3.middleware_onion.inject(geth_poa_middleware, layer=0)
-    web3.eth.default_account = config.METAMASK_ADDRESS
+    web3.eth.default_account = config.SYSTEM_WALLET_ADDRESS
 
     return web3
 
 
 def get_token_contract(web3, abi):
-    addr = web3.toChecksumAddress(config.TOKEN_ADDRESS)
+    addr = web3.toChecksumAddress(config.BLOCKCHAIN_TOKEN_ADDRESS)
     return web3.eth.contract(address=addr, abi=abi)
 
 
@@ -151,20 +151,20 @@ def process_withdrawal(withdrawal):
         assert withdrawal.amount < get_system_balance()
 
         amount = int(
-            withdrawal.amount * Decimal(str(1 - config.PERCENT / 100)) * 10**18
+            withdrawal.amount * Decimal(str(1 - config.TAX_PERCENT / 100)) * 10 ** 18
         )
 
         transfer = contract.functions.transfer(
             withdrawal.metamask_address, amount
         ).buildTransaction(
             {
-                "chainId": 56,
-                "gas": config.GAS_COUNT,
+                "chainId": config.BLOCKCHAIN_ID,
+                "gas": config.OUTPUT_GAS_COUNT,
                 "gasPrice": web3.eth.gasPrice,
-                "nonce": web3.eth.getTransactionCount(config.METAMASK_ADDRESS),
+                "nonce": web3.eth.getTransactionCount(config.SYSTEM_WALLET_ADDRESS),
             }
         )
-        account = web3.eth.account.privateKeyToAccount(config.METAMASK_PRIVATE_KEY)
+        account = web3.eth.account.privateKeyToAccount(config.SYSTEM_WALLET_PRIVATE_KEY)
         signed_transfer = account.signTransaction(transfer)
         sent_transfer = web3.eth.sendRawTransaction(signed_transfer.rawTransaction)
 
@@ -214,6 +214,6 @@ def get_system_balance():
 
     contract = get_token_contract(web3, abi)
 
-    balance = contract.functions.balanceOf(config.METAMASK_ADDRESS).call()
+    balance = contract.functions.balanceOf(config.SYSTEM_WALLET_ADDRESS).call()
 
     return Decimal(balance) / 10**18
