@@ -2,9 +2,11 @@ from telebot import types
 
 from models import queries
 from models.models import Deal
-from app import keyboards, functions
+from app import functions
 from app import config
 from app.bot import bot
+from content import keyboards
+from content.languages import get_strings
 from handlers import next_step_hadlers
 
 __all__ = ["register_bot_callback_handler"]
@@ -23,20 +25,22 @@ def callback_handler(call):
     chat_id = call.message.chat.id
     message_id = call.message.message_id
     user = queries.get_user(chat_id)
-    if user.metamask_address is None:
+    strings = get_strings(user.language)
+
+    if user.blockchain_address is None:
         bot.edit_message_text(
             chat_id=chat_id,
             message_id=message_id,
-            text="⛔️ У Вас не указан адрес кошелька для вывода.",
-            reply_markup=keyboards.change_metamask,
+            text=strings.you_have_not_wallet,
+            reply_markup=keyboards.change_address(strings),
         )
     else:
         msg = bot.edit_message_text(
             chat_id=chat_id,
             message_id=message_id,
-            text=f"Ваш адрес Metamask - {user.metamask_address}\n"
-            f"Баланс - {user.balance} USDT\n"
-            f"Введите сумму для вывода. (Для отмены введите любую букву)",
+            text=strings.init_withdrawal.format(
+                address=user.blockchain_address, balance=user.balance
+            ),
         )
         bot.register_next_step_handler(msg, next_step_hadlers.output)
 
@@ -45,40 +49,44 @@ def callback_handler(call):
 def callback_handler(call):
     chat_id = call.message.chat.id
     message_id = call.message.message_id
+    user = queries.get_user(chat_id)
+    strings = get_strings(user.language)
 
     msg = bot.edit_message_text(
         chat_id=chat_id,
         message_id=message_id,
-        text="⚠️ Пополнение баланса\n"
-        "Чтобы пополнить баланс, отправьте желаемую сумму на кошелёк сервиса в Metamask.\n"
-        "После этого Вам нужно скопировать ID транзакции и вставить его здесь.\n\n"
-        f"👉 Адрес кошелька - <b><code>{config.SYSTEM_WALLET_ADDRESS}</code></b>\n\n"
-        'Для отмены напишите "-" без кавычек.',
+        text=strings.wallet_input.format(address=config.SYSTEM_WALLET_ADDRESS),
         parse_mode="HTML",
     )
     bot.register_next_step_handler(msg, next_step_hadlers.register_transaction_hash)
 
 
-@register_bot_callback_handler("change_metamask")
+@register_bot_callback_handler("change_address")
 def callback_handler(call):
     chat_id = call.message.chat.id
     message_id = call.message.message_id
+    user = queries.get_user(chat_id)
+    strings = get_strings(user.language)
+
     msg = bot.edit_message_text(
         chat_id=chat_id,
         message_id=message_id,
-        text="📄 Введите адрес кошелька.\n\n" 'Для отмены напишите "-" без кавычек.',
+        text=strings.change_wallet,
     )
-    bot.register_next_step_handler(msg, next_step_hadlers.change_metamask)
+    bot.register_next_step_handler(msg, next_step_hadlers.change_address)
 
 
 @register_bot_callback_handler("seller_offer_init")
 def callback_handler(call):
     chat_id = call.message.chat.id
     message_id = call.message.message_id
+    user = queries.get_user(chat_id)
+    strings = get_strings(user.language)
+
     msg = bot.edit_message_text(
         chat_id=chat_id,
         message_id=message_id,
-        text='Введите ChatID пользователя, с которым хотите провести сделку. \n\nДля отмены напишите "-" без кавычек.',
+        text=strings.init_deal,
     )
     bot.register_next_step_handler(msg, next_step_hadlers.search_customer_for_init)
 
@@ -87,10 +95,13 @@ def callback_handler(call):
 def callback_handler(call):
     chat_id = call.message.chat.id
     message_id = call.message.message_id
+    user = queries.get_user(chat_id)
+    strings = get_strings(user.language)
+
     msg = bot.edit_message_text(
         chat_id=chat_id,
         message_id=message_id,
-        text='Введите ChatID пользователя, с которым хотите провести сделку. \n\nДля отмены напишите "-" без кавычек.',
+        text=strings.init_deal,
     )
     bot.register_next_step_handler(msg, next_step_hadlers.search_seller_for_init)
 
@@ -99,15 +110,18 @@ def callback_handler(call):
 def callback_handler(call):
     chat_id = call.message.chat.id
     user = queries.get_user(chat_id)
+    strings = get_strings(user.language)
 
     if len(user.seller_offers) == 0:
-        bot.send_message(chat_id, text="⛔️ Сделок не обнаружено.")
+        bot.send_message(chat_id, text=strings.no_offers)
         return
 
     text = ""
     for offer in user.seller_offers:
         username = bot.get_chat(offer.customer_id).username
-        text += f"💠 C @{username} (ChatID - {offer.customer_id}) на сумму {offer.amount} USDT.\n\n"
+        text += strings.offer_info.format(
+            username=username, user_id=offer.customer_id, amount=offer.amount
+        )
 
     bot.send_message(chat_id, text=text)
 
@@ -116,15 +130,18 @@ def callback_handler(call):
 def callback_handler(call):
     chat_id = call.message.chat.id
     user = queries.get_user(chat_id)
+    strings = get_strings(user.language)
 
     if len(user.customer_offers) == 0:
-        bot.send_message(chat_id, text="⛔️ Сделок не обнаружено.")
+        bot.send_message(chat_id, text=strings.no_offers)
         return
 
     text = ""
     for offer in user.customer_offers:
         username = bot.get_chat(offer.seller_id).username
-        text += f"💠 C @{username} (ChatID - {offer.seller_id}) на сумму {offer.amount} USDT.\n\n"
+        text += strings.offer_info.format(
+            username=username, user_id=offer.seller_id, amount=offer.amount
+        )
 
     bot.send_message(chat_id, text=text)
 
@@ -135,11 +152,13 @@ def callback_handler(call):
     message_id = call.message.message_id
     if not functions.check_admin_permission(chat_id):
         return
+    user = queries.get_user(chat_id)
+    strings = get_strings(user.language)
 
     msg = bot.edit_message_text(
         chat_id=chat_id,
         message_id=message_id,
-        text='Введите ChatID пользователя, которого нужно забанить. \n\nДля отмены напишите "-" без кавычек.',
+        text=strings.user_id_for_ban,
     )
     bot.register_next_step_handler(msg, next_step_hadlers.ban_user)
 
@@ -150,11 +169,13 @@ def callback_handler(call):
     message_id = call.message.message_id
     if not functions.check_admin_permission(chat_id):
         return
+    user = queries.get_user(chat_id)
+    strings = get_strings(user.language)
 
     msg = bot.edit_message_text(
         chat_id=chat_id,
         message_id=message_id,
-        text='Введите ChatID пользователя, которого нужно разбанить. \n\nДля отмены напишите "-" без кавычек.',
+        text=strings.user_id_for_unban,
     )
     bot.register_next_step_handler(msg, next_step_hadlers.unban_user)
 
@@ -162,9 +183,11 @@ def callback_handler(call):
 @register_bot_callback_handler("customer_solve_dispute")
 def callback_handler(call):
     chat_id = call.message.chat.id
+    user = queries.get_user(chat_id)
+    strings = get_strings(user.language)
     msg = bot.send_message(
         chat_id,
-        text='Покупатель получит деньги, а сделка будет отменена.\nДля подтверждения введите ID сделки, для отмены введите "-" без кавычек',
+        text=strings.customer_dispute_solve_confirm,
     )
     bot.register_next_step_handler(msg, next_step_hadlers.customer_solve_dispute)
 
@@ -172,9 +195,11 @@ def callback_handler(call):
 @register_bot_callback_handler("seller_solve_dispute")
 def callback_handler(call):
     chat_id = call.message.chat.id
+    user = queries.get_user(chat_id)
+    strings = get_strings(user.language)
     msg = bot.send_message(
         chat_id,
-        text='Продавец получит деньги, а сделка будет отменена.\nДля подтверждения введите ID сделки, для отмены введите "-" без кавычек.',
+        text=strings.seller_dispute_solve_confirm,
     )
     bot.register_next_step_handler(msg, next_step_hadlers.seller_solve_dispute)
 
@@ -183,32 +208,38 @@ def callback_handler(call):
 def callback_handler(call):
     chat_id = call.message.chat.id
     message_id = call.message.message_id
+    user = queries.get_user(chat_id)
+    strings = get_strings(user.language)
 
     bot.edit_message_text(
         chat_id=chat_id,
         message_id=message_id,
-        text="✅ Предложение о проведении сделки отправлено.",
-        reply_markup=keyboards.cancel_deal,
+        text=strings.deal_proposal_sent,
+        reply_markup=keyboards.cancel_deal(strings),
     )
 
-    user = queries.get_user(chat_id)
     deal = user.seller_deal or user.customer_deal
     if user.seller_deal:
-        role = "покупатель"
-        second_chat_id = deal.customer_id
+        second_user = deal.customer
+        strings = get_strings(second_user.language)
+        role = strings.customer
+
     else:
-        role = "продавец"
-        second_chat_id = deal.seller_id
+        second_user = deal.seller
+        strings = get_strings(second_user.language)
+        role = strings.seller
 
     bot.send_message(
-        second_chat_id,
-        text="✅ Вам отправлено предложение о сделке.",
+        second_user.chat_id,
+        text=strings.deal_proposal_received,
         reply_markup=types.ReplyKeyboardRemove(),
     )
     bot.send_message(
-        second_chat_id,
-        functions.format_user_info(user) + f"\n\n🔥 В этой сделке вы {role}.",
-        reply_markup=keyboards.accept_deal,
+        second_user.chat_id,
+        strings.deal_proposal_info.format(
+            user_info=functions.format_user_info(user, strings), role=role
+        ),
+        reply_markup=keyboards.accept_deal(strings),
         parse_mode="HTML",
     )
 
@@ -217,18 +248,16 @@ def callback_handler(call):
 def callback_handler(call):
     chat_id = call.message.chat.id
     message_id = call.message.message_id
-
     user = queries.get_user(chat_id)
+    strings = get_strings(user.language)
     deal = user.seller_deal or user.customer_deal
 
     if deal.status != Deal.Status.new:
-        bot.send_message(
-            chat_id, text="⛔️ Сделка уже начата, и не может быть отменена."
-        )
+        bot.send_message(chat_id, text=strings.cannot_cancel_deal)
         return
 
     bot.edit_message_text(
-        chat_id=chat_id, message_id=message_id, text="⛔️ Сделка отменена."
+        chat_id=chat_id, message_id=message_id, text=strings.cancel_deal
     )
     deal.delete()
 
@@ -237,32 +266,33 @@ def callback_handler(call):
 def callback_handler(call):
     chat_id = call.message.chat.id
     message_id = call.message.message_id
-
     user = queries.get_user(chat_id)
+    strings = get_strings(user.language)
     deal = user.seller_deal or user.customer_deal
+
     if user.seller_deal:
-        second_chat_id = deal.customer_id
+        second_user = deal.customer
     else:
-        second_chat_id = deal.seller_id
+        second_user = deal.seller
 
     if deal.status != Deal.Status.new:
-        bot.send_message(
-            chat_id, text="⛔️ Сделка уже начата, и не может быть отменена."
-        )
+        bot.send_message(chat_id, text=strings.cannot_cancel_deal)
         return
 
     bot.edit_message_text(
-        chat_id=chat_id, message_id=message_id, text="⛔️ Сделка отменена."
+        chat_id=chat_id, message_id=message_id, text=strings.cancel_deal
     )
-    bot.send_message(chat_id=second_chat_id, text="⛔️ Сделка отменена.")
+    strings = get_strings(second_user.language)
+    bot.send_message(chat_id=second_user.chat_id, text=strings.cancel_deal)
     deal.delete()
 
 
 @register_bot_callback_handler("reviews")
 def callback_handler(call):
     chat_id = call.message.chat.id
-
     user = queries.get_user(chat_id)
+    strings = get_strings(user.language)
+
     if user.seller_deal:
         second_chat_id = user.seller_deal.customer_id
     else:
@@ -276,7 +306,7 @@ def callback_handler(call):
             text += f"💠 {offer.review}\n\n"
 
     if text == "":
-        bot.send_message(chat_id=chat_id, text="⛔️ отзывов не обнаружено.")
+        bot.send_message(chat_id=chat_id, text=strings.no_review)
         return
 
     bot.send_message(chat_id=chat_id, text=text)
@@ -285,24 +315,30 @@ def callback_handler(call):
 @register_bot_callback_handler("accept_deal")
 def callback_handler(call):
     chat_id = call.message.chat.id
-
     user = queries.get_user(chat_id)
     deal = user.seller_deal or user.customer_deal
+
     if deal.status != deal.Status.new:
         return
     deal.status = Deal.Status.open
     deal.save()
 
+    strings = get_strings(deal.customer.language)
     bot.send_message(
         chat_id=deal.customer_id,
-        text=f"💰 Сделка {functions.format_deal_info(deal)}",
-        reply_markup=keyboards.customer_panel,
+        text=strings.deal_accepted.format(
+            deal_info=functions.format_deal_info(deal, strings)
+        ),
+        reply_markup=keyboards.customer_panel(strings),
         parse_mode="HTML",
     )
+    strings = get_strings(deal.seller.language)
     bot.send_message(
         chat_id=deal.seller_id,
-        text=f"💰 Сделка {functions.format_deal_info(deal)}",
-        reply_markup=keyboards.seller_panel,
+        text=strings.deal_accepted.format(
+            deal_info=functions.format_deal_info(deal, strings)
+        ),
+        reply_markup=keyboards.seller_panel(strings),
         parse_mode="HTML",
     )
 
@@ -310,18 +346,17 @@ def callback_handler(call):
 @register_bot_callback_handler("set_price")
 def callback_handler(call):
     chat_id = call.message.chat.id
-
     user = queries.get_user(chat_id)
+    strings = get_strings(user.language)
     deal = user.seller_deal
+
     if deal.amount != 0:
-        bot.send_message(
-            chat_id, text="Вы уже ввели сумму товара и не можете её редактировать."
-        )
+        bot.send_message(chat_id, text=strings.deal_amount_already_sets)
         return
 
     msg = bot.send_message(
         chat_id,
-        text='Введите сумму сделки. Обратите внимание, сумму сделки можно ввести всего один раз \n\nДля отмены напишите "-" без кавычек.',
+        text=strings.set_deal_amount,
     )
     bot.register_next_step_handler(msg, next_step_hadlers.set_price)
 
@@ -329,45 +364,50 @@ def callback_handler(call):
 @register_bot_callback_handler("open_dispute")
 def callback_handler(call):
     chat_id = call.message.chat.id
-
     user = queries.get_user(chat_id)
+    strings = get_strings(user.language)
     deal = user.seller_deal or user.customer_deal
 
     if deal.status == Deal.Status.new:
-        bot.send_message(chat_id, text="⛔️ Сделка ещё не открыта!")
+        bot.send_message(chat_id, text=strings.dispute_status_new)
         return
 
     if deal.status == Deal.Status.open:
         bot.send_message(
             chat_id,
-            text=f"⛔️ Передача товара ещё подтверждена. Если Вы считаете, что другой участник сделки хочет вас обмануть, закройте сделку и сообщите администратору - @{config.ADMIN_USERNAME}",
+            text=strings.dispute_status_open.format(admin=config.ADMIN_USERNAME),
         )
         return
 
     if deal.status == Deal.Status.dispute:
         bot.send_message(
             chat_id,
-            text=f"⛔️ Спор уже начат. Если долго ничего не происходит, напишите администратору @{config.ADMIN_USERNAME}.",
+            text=strings.dispute_status_new.dispute.format(admin=config.ADMIN_USERNAME),
         )
         return
 
     deal.status = Deal.Status.dispute
     deal.save()
 
+    strings = get_strings(deal.customer.language)
     bot.send_message(
         deal.customer_id,
-        text=f"По вашей сделке начат спор. Если долго ничего не происходит, напишите администратору @{config.ADMIN_USERNAME}.",
+        text=strings.dispute_has_been_open.format(admin=config.ADMIN_USERNAME),
     )
+    strings = get_strings(deal.seller.language)
     bot.send_message(
         deal.seller_id,
-        text=f"По вашей сделке начат спор. Если долго ничего не происходит, напишите администратору @{config.ADMIN_USERNAME}.",
+        text=strings.dispute_has_been_open.format(admin=config.ADMIN_USERNAME),
     )
 
+    admin = queries.get_user(config.ADMIN_FIRST_CHAT_ID)
+    strings = get_strings(admin.language)
     bot.send_message(
         config.ADMIN_FIRST_CHAT_ID,
-        text=f"Был начат спор.\n\n"
-        f"Сделка {functions.format_deal_info(deal)}\n\n"
-        f'Спор инициировал {"продавец" if user.seller_deal else "покупатель"}.',
+        text=strings.dispute_has_been_open_admin.format(
+            info=functions.format_deal_info(deal, strings),
+            role=strings.seller if user.seller_deal else strings.customer,
+        ),
         parse_mode="HTML",
     )
 
@@ -375,26 +415,23 @@ def callback_handler(call):
 @register_bot_callback_handler("confirm_fund")
 def callback_handler(call):
     chat_id = call.message.chat.id
-
     user = queries.get_user(chat_id)
+    strings = get_strings(user.language)
     deal = user.customer_deal
 
     if deal.status == Deal.Status.success:
         bot.send_message(
             chat_id,
-            text="Вы уверены что получили товар, и он валидный? Если нет, или условия не соблюдены, то вам необходимо открыть спор.",
-            reply_markup=keyboards.confirm_fund,
+            text=strings.confirm_fund,
+            reply_markup=keyboards.confirm_fund(strings),
         )
     else:
-        bot.send_message(
-            chat_id, text="✅ Вы не оплатили сделку, или над ней ведётся спор."
-        )
+        bot.send_message(chat_id, text=strings.confirm_reject)
 
 
 @register_bot_callback_handler("confirm_confirm_fund")
 def callback_handler(call):
     chat_id = call.message.chat.id
-
     user = queries.get_user(chat_id)
     deal = user.customer_deal
 
@@ -404,63 +441,68 @@ def callback_handler(call):
         deal.seller.save()
         deal.save()
 
+        strings = get_strings(deal.customer.language)
         bot.send_message(
             deal.customer_id,
-            text="✅ Сделка успешно завершена!\n" "📝 Хотите оставить отзыв о продавце?",
-            reply_markup=keyboards.add_review,
+            text=strings.fund_confirmed_customer,
+            reply_markup=keyboards.add_review(strings),
         )
+        strings = get_strings(deal.seller.language)
         bot.send_message(
             deal.seller_id,
-            text="✅ Сделка успешно завершена!\n"
-            "💰 Деньги зачислены на ваш счёт.\n\n"
-            "📝 Сейчас покупатель оставляет отзыв, подождите пожалуйста.",
-            reply_markup=keyboards.cancel_wait,
+            text=strings.fund_confirmed_seller,
+            reply_markup=keyboards.cancel_wait(strings),
         )
     else:
-        bot.send_message(
-            chat_id, text="Вы не оплатили сделку, или над ней ведётся спор."
-        )
+        strings = get_strings(user.language)
+        bot.send_message(chat_id, text=strings.confirm_reject)
 
 
 @register_bot_callback_handler("close_deal")
 def callback_handler(call):
     chat_id = call.message.chat.id
+    user = queries.get_user(chat_id)
+    strings = get_strings(user.language)
     bot.send_message(
         chat_id,
-        text="Вы уверены что хотите отменить сделку?",
-        reply_markup=keyboards.choice_close_deal,
+        text=strings.close_deal_confirm,
+        reply_markup=keyboards.choice_close_deal(strings),
     )
 
 
 @register_bot_callback_handler("close_close_deal")
 def callback_handler(call):
     chat_id = call.message.chat.id
-
     user = queries.get_user(chat_id)
+    strings = get_strings(user.language)
     deal = user.seller_deal or user.customer_deal
-    if user.seller_deal:
-        role = "Продавец"
-        second_chat_id = deal.customer_id
-    else:
-        role = "Покупатель"
-        second_chat_id = deal.seller_id
 
     if deal.status == Deal.Status.open:
         bot.answer_callback_query(
             callback_query_id=call.id,
             show_alert=True,
-            text="Запрос на отмену отправлен.",
+            text=strings.close_request_sent,
         )
+
+        if user.seller_deal:
+            second_user = deal.customer
+            strings = get_strings(second_user.language)
+            role = strings.seller
+        else:
+            second_user = deal.seller
+            strings = get_strings(second_user.language)
+            role = strings.customer
+
         bot.send_message(
-            second_chat_id,
-            text=f"{role} предложил отменить сделку.",
-            reply_markup=keyboards.choice_accept_cancel,
+            second_user.chat_id,
+            text=strings.close_request_received.format(role=role),
+            reply_markup=keyboards.choice_accept_cancel(strings),
         )
     else:
         bot.answer_callback_query(
             callback_query_id=call.id,
             show_alert=True,
-            text="Сделка уже завершена или над ней проходит спор.",
+            text=strings.deal_canceled_or_dispute_active,
         )
 
 
@@ -474,14 +516,15 @@ def callback_handler(call):
 @register_bot_callback_handler("pay")
 def callback_handler(call):
     chat_id = call.message.chat.id
-
     user = queries.get_user(chat_id)
+    strings = get_strings(user.language)
     deal = user.customer_deal
+
     if deal.amount == 0:
         bot.answer_callback_query(
             callback_query_id=call.id,
             show_alert=True,
-            text="⛔️ Продавец не указал сумму.",
+            text=strings.seller_not_set_amount,
         )
         return
 
@@ -489,19 +532,17 @@ def callback_handler(call):
         bot.answer_callback_query(
             callback_query_id=call.id,
             show_alert=True,
-            text="Вы уже оплатили товар, продавец обязан вам его передать. Если продавец отказывается передать товар, откройте спор.",
+            text=strings.fund_already_payed,
         )
         return
 
     if user.balance < deal.amount:
         bot.send_message(
             chat_id,
-            text="📉 Вам необходимо пополнить баланс!\n"
-            f"💰 Ваш баланс - {user.balance} USDT\n"
-            f"💳 Необходимый баланс - {deal.amount} USDT\n\n"
-            f"Если Вы указали в своём профиле адрес Metamask кошелька, Вы можете выполнить перевод на <b><code>{config.SYSTEM_WALLET_ADDRESS}</code></b>, средства зачислятся автоматически.\n"
-            "В противном случае Вам необходимо отменить сделку для привязки кошелька к профилю.",
-            parse_mode="HTML",
+            text=strings.not_enough_for_pay.format(
+                balance=user.balance,
+                amount=deal.amount,
+            ),
         )
         return
 
@@ -511,62 +552,66 @@ def callback_handler(call):
     deal.save()
 
     bot.send_message(
-        deal.seller_id,
-        text="✅ Покупатель оплатил сделку! Теперь Вам необходимо передать товар.",
+        deal.chat_id,
+        text=strings.fund_payed_customer,
     )
+    strings = get_strings(deal.seller.language)
     bot.send_message(
-        deal.customer_id,
-        text="✅ Товар был успешно оплачен, ожидайте получения товара. Если товар оказался не валид, или продавец Вас кинул в ЧС, откройте спор.",
+        deal.seller_id,
+        text=strings.fund_payed_seller,
     )
 
 
 @register_bot_callback_handler("add_review")
 def callback_handler(call):
     chat_id = call.message.chat.id
-
     user = queries.get_user(chat_id)
+    strings = get_strings(user.language)
     deal = user.seller_deal
+
     if deal.status != Deal.Status.review:
         return
 
-    msg = bot.send_message(
-        chat_id, text='🔥 Напишите отзыв о сделке, для отмены вышлите "-" без кавычек.'
-    )
+    msg = bot.send_message(chat_id, text=strings.add_review)
     bot.register_next_step_handler(msg, next_step_hadlers.add_review)
 
 
 @register_bot_callback_handler("no_review")
 def callback_handler(call):
     chat_id = call.message.chat.id
-
     user = queries.get_user(chat_id)
+    strings = get_strings(user.language)
     deal = user.seller_deal or user.customer_deal
+
     if deal.status != Deal.Status.review:
         return
 
     if user.seller_deal:
-        second_chat_id = deal.customer_id
-        bot.send_message(
-            second_chat_id,
-            text="❄️ Продавец не захотел ожидать отзыва. Сделка завершена.",
-            reply_markup=keyboards.menu,
-        )
         bot.send_message(
             chat_id=chat_id,
-            text="❄️Ожидание отменено, покупатель не может больше оставить отзыв.",
-            reply_markup=keyboards.menu,
+            text=strings.seller_cancel_review_seller,
+            reply_markup=keyboards.menu(strings),
         )
+        second_user = deal.customer
+        strings = get_strings(second_user.language)
+        bot.send_message(
+            second_user.chat_id,
+            text=strings.seller_cancel_review_customer,
+            reply_markup=keyboards.menu(strings),
+        )
+
     else:
-        second_chat_id = deal.seller_id
-        bot.send_message(
-            second_chat_id,
-            text="❄️ Покупатель отказался оставлять отзыв.",
-            reply_markup=keyboards.menu,
-        )
         bot.send_message(
             chat_id=chat_id,
-            text="❄️ Сделка успешно завершена!",
-            reply_markup=keyboards.menu,
+            text=strings.customer_cancel_review_customer,
+            reply_markup=keyboards.menu(strings),
+        )
+        second_user = deal.seller
+        strings = get_strings(second_user.language)
+        bot.send_message(
+            second_user.chat_id,
+            text=strings.customer_cancel_review_seller,
+            reply_markup=keyboards.menu(strings),
         )
 
     queries.new_offer(deal, None)
@@ -575,27 +620,29 @@ def callback_handler(call):
 @register_bot_callback_handler("accept_close")
 def callback_handler(call):
     chat_id = call.message.chat.id
-
     user = queries.get_user(chat_id)
+    strings = get_strings(user.language)
     deal = user.seller_deal or user.customer_deal
 
     if deal.status == Deal.Status.open:
+        strings = get_strings(deal.customer.language)
         bot.send_message(
             deal.customer_id,
-            text="✅ Сделка успешно отменена.",
-            reply_markup=keyboards.menu,
+            text=strings.deal_canceled,
+            reply_markup=keyboards.menu(strings),
         )
+        strings = get_strings(deal.seller.language)
         bot.send_message(
             deal.seller_id,
-            text="✅ Сделка успешно отменена.",
-            reply_markup=keyboards.menu,
+            text=strings.deal_canceled,
+            reply_markup=keyboards.menu(strings),
         )
         deal.delete()
     else:
         bot.answer_callback_query(
             callback_query_id=call.id,
             show_alert=True,
-            text="✅ Сделка уже завершена или над ней проходит спор.",
+            text=strings.deal_canceled_or_dispute_active,
         )
 
 
@@ -605,5 +652,8 @@ def callback_handler(call):
     user = queries.get_user(chat_id)
     deal = user.seller_deal or user.customer_deal
 
-    bot.send_message(deal.customer_id, text="✅ Процесс отмены сделки аннулирован.")
-    bot.send_message(deal.seller_id, text="✅ Процесс отмены сделки аннулирован.")
+    strings = get_strings(deal.customer.language)
+    bot.send_message(deal.customer_id, text=strings.refuse_cancel_deal)
+
+    strings = get_strings(deal.customer.seller)
+    bot.send_message(deal.seller_id, text=strings.refuse_cancel_deal)
