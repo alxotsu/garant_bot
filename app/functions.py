@@ -8,6 +8,7 @@ from web3.middleware import geth_poa_middleware
 from app import config
 from app.bot import bot
 from models import queries
+from content.languages import get_strings
 
 
 def check_admin_permission(chat_id):
@@ -15,56 +16,51 @@ def check_admin_permission(chat_id):
 
 
 def check_user_blocks(user):
+    strings = get_strings(user.language)
     if user.banned:
-        return "⛔️ К сожалению, Вы получили блокировку!"
+        return strings.banned
     if user.customer_deal is not None or user.seller_deal is not None:
-        return "⛔️ Вы не можете взаимодействовать с ботом, пока не завершите сделку!"
+        return strings.have_deal_now
 
 
-def search_second_user(message):
+def search_second_user(message, strings):
     if message.text.startswith("-") or not message.text.isdigit():
-        bot.send_message(message.chat.id, text="Отмена...")
+        bot.send_message(message.chat.id, text=strings.cancel)
         return
 
     if int(message.text) == message.chat.id:
-        bot.send_message(message.chat.id, text="⛔️Нельзя начать сделку с самим собой.")
+        bot.send_message(message.chat.id, text=strings.cannot_init_deal_with_yourself)
         return
 
     second_user = queries.get_user(int(message.text))
     if second_user is None:
-        bot.send_message(
-            message.chat.id, text="⛔️Пользователь с введённым ChatID не найден."
-        )
+        bot.send_message(message.chat.id, text=strings.user_not_found)
         return
 
     if second_user.banned:
-        bot.send_message(
-            message.chat.id, text="⛔️Пользователь с введённым ChatID заблокирован."
-        )
+        bot.send_message(message.chat.id, text=strings.user_banned)
         return
 
     if second_user.customer_deal is not None or second_user.seller_deal is not None:
         bot.send_message(
             message.chat.id,
-            text="⛔️Пользователь с введённым ChatID в данный момент уже участвует в сделке.",
+            text=strings.user_already_in_deal,
         )
         return
 
     return second_user
 
 
-def ban_or_unban_user(message, ban):
+def ban_or_unban_user(message, ban, strings):
     if not check_admin_permission(message.chat.id):
         return
     if message.text.startswith("-") or not message.text.isdigit():
-        bot.send_message(message.chat.id, text="Отмена...")
+        bot.send_message(message.chat.id, text=strings.cancel)
         return
 
     user = queries.get_user(int(message.text))
     if user is None:
-        bot.send_message(
-            message.chat.id, text="⛔️Пользователь с введённым ChatID не найден."
-        )
+        bot.send_message(message.chat.id, text=strings.user_not_found)
         return
     user.banned = ban
     user.save()
@@ -72,49 +68,55 @@ def ban_or_unban_user(message, ban):
 
 
 def solve_dispute(message, customer_solve):
+    user = queries.get_user(message.chat.id)
+    strings = get_strings(user.language)
     if not check_admin_permission(message.chat.id):
         return
     if message.text.startswith("-") or not message.text.isdigit():
-        bot.send_message(message.chat.id, text="Отмена...")
+        bot.send_message(message.chat.id, text=strings.cancel)
         return
 
     deal = queries.get_deal(int(message.text))
     if deal is None:
-        bot.send_message(message.chat.id, text="⛔️Сделка не найдена. Отмена...")
+        bot.send_message(
+            message.chat.id, text=f"{strings.deal_not_found} {strings.cancel}"
+        )
         return
     if customer_solve:
-        bot.send_message(deal.customer_id, "✅ Вердикт был вынесен в вашу пользу.")
-        bot.send_message(deal.customer_id, "✅ Вердикт был вынесен в пользу покупателя.")
-        bot.send_message(message.chat.id, "✅ Вердикт был вынесен в пользу покупателя.")
+        bot.send_message(deal.customer_id, strings.dispute_solved_for_you)
+        bot.send_message(deal.customer_id, strings.dispute_solved_customer)
+        bot.send_message(message.chat.id, strings.dispute_solved_customer)
         deal.customer.balance += deal.amount
         deal.customer.save()
     else:
-        bot.send_message(deal.customer_id, "✅ Вердикт был вынесен в пользу продавца.")
-        bot.send_message(deal.customer_id, "✅ Вердикт был вынесен в вашу пользу.")
-        bot.send_message(message.chat.id, "✅ Вердикт был вынесен в пользу продавца.")
+        bot.send_message(deal.customer_id, strings.dispute_solved_seller)
+        bot.send_message(deal.customer_id, strings.dispute_solved_for_you)
+        bot.send_message(message.chat.id, strings.dispute_solved_seller)
         deal.seller.balance += deal.amount
         deal.seller.save()
     deal.delete()
 
 
-def format_user_info(user):
-    return (
-        f"❕ ChatID - <b><code>{user.chat_id}</code></b>\n"
-        f"❕ Имя пользователя - @{bot.get_chat(user.chat_id).username}\n"
-        f"❕ Проведенных сделок - {len(user.customer_offers) + len(user.seller_offers)}"
+def format_user_info(user, strings):
+    return strings.format_user_info.format(
+        chat_id=user.chat_id,
+        username=bot.get_chat(user.chat_id).username,
+        offers_count=len(user.customer_offers) + len(user.seller_offers),
     )
 
 
-def format_deal_info(deal):
+def format_deal_info(deal, strings):
     seller_username = bot.get_chat(deal.seller.chat_id).username
     customer_username = bot.get_chat(deal.customer.chat_id).username
 
-    return (
-        f"№{deal.id}\n"
-        f"❕ Покупатель - @{customer_username} (ChatID <b><code>{deal.customer_id}</code></b>)\n"
-        f"❕ Продавец - @{seller_username} (ChatID <b><code>{deal.seller_id}</code></b>)\n"
-        f"💰 Сумма сделки - {deal.amount} USDT\n"
-        f"📊 Статус сделки - {deal.status.value}"
+    return strings.format_deal_info.format(
+        deal_id=deal.id,
+        customer_username=customer_username,
+        customer_id=deal.customer_id,
+        seller_username=seller_username,
+        seller_id=deal.seller_id,
+        amount=deal.amount,
+        status=strings.deal_statuses[deal.status],
     )
 
 
@@ -131,7 +133,7 @@ def get_token_contract(web3, abi):
     return web3.eth.contract(address=addr, abi=abi)
 
 
-def process_withdrawal(withdrawal):
+def process_withdrawal(withdrawal, strings):
     web3 = get_web3_remote_provider()
     abi = [
         {
@@ -151,11 +153,11 @@ def process_withdrawal(withdrawal):
         assert withdrawal.amount < get_system_balance()
 
         amount = int(
-            withdrawal.amount * Decimal(str(1 - config.TAX_PERCENT / 100)) * 10 ** 18
+            withdrawal.amount * Decimal(str(1 - config.TAX_PERCENT / 100)) * 10**18
         )
 
         transfer = contract.functions.transfer(
-            withdrawal.metamask_address, amount
+            withdrawal.blockchain_address, amount
         ).buildTransaction(
             {
                 "chainId": config.BLOCKCHAIN_ID,
@@ -174,9 +176,11 @@ def process_withdrawal(withdrawal):
 
         bot.send_message(
             withdrawal.user_id,
-            f"{withdrawal.amount} USDT было выведено на кошелёк - "
-            f"<b><code>{withdrawal.metamask_address}</code></b>\n\n"
-            f"Хэш транзакции - <b><code>{sent_transfer.hex()}</code></b>",
+            strings.withdrawal_complete.format(
+                amount=withdrawal.amount,
+                address=withdrawal.blockchain_address,
+                hex_hash=sent_transfer.hex(),
+            ),
             parse_mode="HTML",
         )
 
@@ -188,9 +192,7 @@ def process_withdrawal(withdrawal):
         withdrawal.save()
         bot.send_message(
             withdrawal.user_id,
-            f"Вывод {withdrawal.amount} USDT не удался."
-            " Проверьте правильность введённого адреса кошелька"
-            " Metamask в своём профиле и повторите попытку.",
+            strings.withdrawal_error.format(amount=withdrawal.amount),
         )
 
 

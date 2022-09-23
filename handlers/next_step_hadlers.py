@@ -6,18 +6,23 @@ from web3.exceptions import TransactionNotFound
 from app.bot import bot
 from app import functions
 from app import config
-from app import keyboards
+from content import keyboards
+from content.languages import get_strings
 from models import queries, Deal
 
 
 def ban_user(message):
-    if functions.ban_or_unban_user(message, True):
-        bot.send_message(message.chat.id, text="✅ Пользователь успешно забанен.")
+    user = queries.get_user(message.chat.id)
+    strings = get_strings(user.language)
+    if functions.ban_or_unban_user(message, True, strings):
+        bot.send_message(message.chat.id, text=strings.ban_user)
 
 
 def unban_user(message):
-    if functions.ban_or_unban_user(message, False):
-        bot.send_message(message.chat.id, text="✅ Пользователь успешно разбанен.")
+    user = queries.get_user(message.chat.id)
+    strings = get_strings(user.language)
+    if functions.ban_or_unban_user(message, False, strings):
+        bot.send_message(message.chat.id, text=strings.unban_user)
 
 
 def customer_solve_dispute(message):
@@ -31,12 +36,14 @@ def seller_solve_dispute(message):
 def send_message_for_all_users(message):
     if not functions.check_admin_permission(message.chat.id):
         return
+    user = queries.get_user(message.chat.id)
+    strings = get_strings(user.language)
 
     if message.text == "-":
-        bot.send_message(message.chat.id, text="Отмена...")
+        bot.send_message(message.chat.id, text=strings.cancel)
     else:
         users = queries.get_all_users()
-        bot.send_message(message.chat.id, text="✅ Идёт рассылка...")
+        bot.send_message(message.chat.id, text=strings.perform_mailing)
         count_all = 0
         count_success = 0
         for user in users:
@@ -50,69 +57,72 @@ def send_message_for_all_users(message):
                 pass
         bot.send_message(
             message.chat.id,
-            text="✅ Рассылка завершена.\n"
-            f"Сообщение получили {count_success} из {count_all} зарегистрированных пользователей.",
+            text=strings.end_mailing.format(success=count_success, all=count_all),
         )
 
 
 def search_dispute(message):
     if not functions.check_admin_permission(message.chat.id):
         return
+    user = queries.get_user(message.chat.id)
+    strings = get_strings(user.language)
 
     if message.text.startswith("-") or not message.text.isdigit():
-        bot.send_message(message.chat.id, text="Отмена...")
+        bot.send_message(message.chat.id, text=strings.cancel)
     else:
         deal = queries.get_deal(int(message.text))
         if deal is None:
-            bot.send_message(message.chat.id, text="⛔️ Сделка не обнаружена!")
+            bot.send_message(message.chat.id, text=strings.deal_not_found)
             return
         bot.send_message(
             message.chat.id,
-            text=f"🧾 Информация о сделке "
-            + functions.format_deal_info(deal)
-            + f"\n\nКто прав в данном споре?",
-            reply_markup=keyboards.solve_dispute,
+            text=strings.dispute_info.format(
+                deal=functions.format_deal_info(deal, strings)
+            ),
+            reply_markup=keyboards.solve_dispute(strings),
             parse_mode="HTML",
         )
 
 
 def output(message):
+    user = queries.get_user(message.chat.id)
+    strings = get_strings(user.language)
     if not functions.is_wallet_amount(message.text):
-        bot.send_message(message.chat.id, text="Отмена...")
+        bot.send_message(message.chat.id, text=strings.cancel)
         return
 
     user = queries.get_user(message.chat.id)
     output_size = Decimal(message.text)
 
     if output_size > user.balance:
-        bot.send_message(
-            message.chat.id, text="⛔️ На балансе недостаточно средств для вывода!"
-        )
+        bot.send_message(message.chat.id, text=strings.not_enough_on_balance)
         return
 
     if float(output_size) < 1:
         bot.send_message(
             message.chat.id,
-            text="⛔️ Минимальная сумма для вывода 1 USDT",
+            text=strings.minimal_withdrawal_amount,
         )
         return
 
     user.balance -= output_size
     user.save()
-    bot.send_message(message.chat.id, text="✅ Запрос на вывод успешно отправлен!")
-    queries.new_withdrawal(user.chat_id, user.metamask_address, output_size)
+    bot.send_message(message.chat.id, text=strings.perform_withdrawal)
+    queries.new_withdrawal(user.chat_id, user.blockchain_address, output_size)
 
 
 def register_transaction_hash(message):
+    user = queries.get_user(message.chat.id)
+    strings = get_strings(user.language)
     if message.text.startswith("-"):
-        bot.send_message(message.chat.id, text="Отмена...")
+        bot.send_message(message.chat.id, text=strings.cancel)
         return
 
     hash_str = message.text[2:]
 
     if queries.get_transaction(hash_str) is not None:
         bot.send_message(
-            message.chat.id, text="Эта транзакция уже была зарегистрирована в боте."
+            message.chat.id, text=strings.this_transaction_already_registered
         )
         return
 
@@ -120,7 +130,7 @@ def register_transaction_hash(message):
     try:
         transaction = web3.eth.get_transaction(bytes.fromhex(hash_str))
     except TransactionNotFound:
-        bot.send_message(message.chat.id, text="Транзакция с таким ID не найдена.")
+        bot.send_message(message.chat.id, text=strings.transaction_not_found)
         return
 
     abi = [
@@ -139,9 +149,7 @@ def register_transaction_hash(message):
     transaction_info = contract.decode_function_input(transaction.input)[1]
 
     if transaction_info["to"] != config.SYSTEM_WALLET_ADDRESS:
-        bot.send_message(
-            message.chat.id, text="Перевод был совершён не на кошелёк сервиса."
-        )
+        bot.send_message(message.chat.id, text=strings.incorrect_recipient)
         return
 
     user = queries.get_user(message.chat.id)
@@ -149,24 +157,26 @@ def register_transaction_hash(message):
     queries.new_transaction(hash_str, user.chat_id, amount)
     user.balance += amount
     user.save()
-    bot.send_message(
-        message.chat.id, text=f"Баланс был успешно пополнен на {amount} USDT."
-    )
+    bot.send_message(message.chat.id, text=strings.complete_input.format(amount=amount))
 
 
-def change_metamask(message):
+def change_address(message):
+    user = queries.get_user(message.chat.id)
+    strings = get_strings(user.language)
     if message.text.startswith("-"):
-        bot.send_message(message.chat.id, text="Отмена...")
+        bot.send_message(message.chat.id, text=strings.cancel)
         return
 
     user = queries.get_user(message.chat.id)
-    user.metamask_address = message.text
+    user.blockchain_address = message.text
     user.save()
-    bot.send_message(message.chat.id, text="✅ Metamask установлен")
+    bot.send_message(message.chat.id, text=strings.blockchain_address_sets_up)
 
 
 def search_seller_for_init(message):
-    second_user = functions.search_second_user(message)
+    user = queries.get_user(message.chat.id)
+    strings = get_strings(user.language)
+    second_user = functions.search_second_user(message, strings)
 
     if second_user is None:
         return
@@ -175,21 +185,23 @@ def search_seller_for_init(message):
 
     bot.send_message(
         message.chat.id,
-        "🧾 Профиль:\n\n"
-        + functions.format_user_info(second_user)
-        + "\n\n🔥В этой сделке вы будете покупателем.",
-        reply_markup=keyboards.sentence_deal,
+        strings.customer_preview.format(
+            user=functions.format_user_info(second_user, strings)
+        ),
+        reply_markup=keyboards.sentence_deal(strings),
         parse_mode="HTML",
     )
     bot.send_message(
         chat_id=message.chat.id,
-        text="Отключение клавиатуры...",
+        text=strings.disable_keyboard,
         reply_markup=types.ReplyKeyboardRemove(),
     )
 
 
 def search_customer_for_init(message):
-    second_user = functions.search_second_user(message)
+    user = queries.get_user(message.chat.id)
+    strings = get_strings(user.language)
+    second_user = functions.search_second_user(message, strings)
 
     if second_user is None:
         return
@@ -198,22 +210,24 @@ def search_customer_for_init(message):
 
     bot.send_message(
         message.chat.id,
-        "🧾 Профиль:\n\n"
-        + functions.format_user_info(second_user)
-        + "\n\n🔥В этой сделке вы будете продавцом.",
-        reply_markup=keyboards.sentence_deal,
+        strings.seller_preview.format(
+            user=functions.format_user_info(second_user, strings)
+        ),
+        reply_markup=keyboards.sentence_deal(strings),
         parse_mode="HTML",
     )
     bot.send_message(
         chat_id=message.chat.id,
-        text="Отключение клавиатуры...",
+        text=strings.disable_keyboard,
         reply_markup=types.ReplyKeyboardRemove(),
     )
 
 
 def set_price(message):
+    user = queries.get_user(message.chat.id)
+    strings = get_strings(user.language)
     if message.text.startswith("-") or not functions.is_wallet_amount(message.text):
-        bot.send_message(message.chat.id, text="Отмена...")
+        bot.send_message(message.chat.id, text=strings.cancel)
         return
 
     deal = queries.get_user(message.chat.id).seller_deal
@@ -225,36 +239,45 @@ def set_price(message):
 
     bot.send_message(
         deal.seller_id,
-        text=f"💥 Сумма сделки успешно изменена.\n\n💰 Сделка {functions.format_deal_info(deal)}",
-        reply_markup=keyboards.seller_panel,
+        text=strings.amount_of_deal_set.format(
+            deal=functions.format_deal_info(deal, strings)
+        ),
+        reply_markup=keyboards.seller_panel(strings),
         parse_mode="HTML",
     )
+    strings = get_strings(deal.customer.language)
     bot.send_message(
         deal.customer_id,
-        text=f"💥 Была изменена сумма сделки.\n\n💰 Сделка {functions.format_deal_info(deal)}",
-        reply_markup=keyboards.customer_panel,
+        text=strings.amount_of_deal_set.format(
+            deal=functions.format_deal_info(deal, strings)
+        ),
+        reply_markup=keyboards.customer_panel(strings),
         parse_mode="HTML",
     )
 
 
 def add_review(message):
+    user = queries.get_user(message.chat.id)
+    strings = get_strings(user.language)
     deal = queries.get_user(message.chat.id).customer_deal
     if deal.status != Deal.Status.review:
         return
 
     if message.text == "-":
-        bot.send_message(message.chat.id, text="Отмена...")
         review = None
         bot.send_message(
-            deal.seller_id,
-            text="❄️ Покупатель отказался оставлять отзыв.",
-            reply_markup=keyboards.menu,
-        )
-        bot.send_message(
             chat_id=deal.customer_id,
-            text="❄️ Сделка успешно завершена!",
-            reply_markup=keyboards.menu,
+            text=strings.customer_cancel_review_customer,
+            reply_markup=keyboards.menu(strings),
         )
+        strings = get_strings(deal.seller.language)
+        bot.send_message(message.chat.id, text=strings.cancel)
+        bot.send_message(
+            deal.seller_id,
+            text=strings.customer_cancel_review_seller,
+            reply_markup=keyboards.menu(strings),
+        )
+
     else:
         review = message.text
 
@@ -262,11 +285,12 @@ def add_review(message):
     if review is not None:
         bot.send_message(
             message.chat.id,
-            text="📝 Отзыв успешно оставлен.",
-            reply_markup=keyboards.menu,
+            text=strings.review_sent_customer,
+            reply_markup=keyboards.menu(strings),
         )
+        strings = get_strings(deal.seller.language)
         bot.send_message(
             offer.seller_id,
-            text=f"📝 О вас оставили отзыв!\n\n{message.text}",
-            reply_markup=keyboards.menu,
+            text=strings.review_sent_seller.format(text=message.text),
+            reply_markup=keyboards.menu(strings),
         )

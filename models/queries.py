@@ -54,9 +54,9 @@ def new_deal(customer_chat_id, seller_chat_id):
     return deal
 
 
-def new_withdrawal(chat_id, metamask_address, amount):
+def new_withdrawal(chat_id, blockchain_address, amount):
     withdrawal = Withdrawal(
-        user_id=chat_id, metamask_address=metamask_address, amount=amount
+        user_id=chat_id, blockchain_address=blockchain_address, amount=amount
     )
     withdrawal.save()
 

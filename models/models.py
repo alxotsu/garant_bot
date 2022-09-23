@@ -29,10 +29,15 @@ class SaveDeleteModelMixin:
 class User(Base, SaveDeleteModelMixin):
     __tablename__ = "user"
 
+    class Language(enum.Enum):
+        ru = "ru"
+        en = "en"
+
     chat_id = sql.Column(sql.BIGINT, primary_key=True)
     balance = sql.Column(sql.DECIMAL, default=0, nullable=False)
-    metamask_address = sql.Column(sql.String(64))
+    blockchain_address = sql.Column(sql.String(64))
     banned = sql.Column(sql.Boolean, nullable=False, default=False)
+    language = sql.Column(sql.Enum(Language), default=Language.ru, nullable=False)
 
     customer_deal = sql.orm.relationship(
         "Deal",
@@ -59,19 +64,17 @@ class Deal(Base, SaveDeleteModelMixin):
     __tablename__ = "deal"
 
     class Status(enum.Enum):
-        new = "Новая"
-        open = "Открыта"
-        dispute = "Начат Спор"
-        review = "Пишется отзыв"
-        success = "Завершена"
+        new = "new"
+        open = "open"
+        dispute = "dispute"
+        review = "review"
+        success = "success"
 
     id = sql.Column(sql.Integer, primary_key=True)
-    customer_id = sql.Column(
-        sql.BIGINT, sql.ForeignKey("user.chat_id"), nullable=False
-    )
+    customer_id = sql.Column(sql.BIGINT, sql.ForeignKey("user.chat_id"), nullable=False)
     seller_id = sql.Column(sql.BIGINT, sql.ForeignKey("user.chat_id"), nullable=False)
     amount = sql.Column(sql.DECIMAL, default=0, nullable=False)
-    status = sql.Column(sql.Enum(Status), default=Status.open)
+    status = sql.Column(sql.Enum(Status), default=Status.open, nullable=False)
 
     customer = sql.orm.relationship(
         "User", back_populates="customer_deal", foreign_keys="Deal.customer_id"
@@ -85,9 +88,7 @@ class Offer(Base, SaveDeleteModelMixin):
     __tablename__ = "offer"
 
     id = sql.Column(sql.Integer, primary_key=True)
-    customer_id = sql.Column(
-        sql.BIGINT, sql.ForeignKey("user.chat_id"), nullable=False
-    )
+    customer_id = sql.Column(sql.BIGINT, sql.ForeignKey("user.chat_id"), nullable=False)
     seller_id = sql.Column(sql.BIGINT, sql.ForeignKey("user.chat_id"), nullable=False)
     amount = sql.Column(sql.DECIMAL, default=0, nullable=False)
     review = sql.Column(sql.String(1024))
@@ -105,7 +106,7 @@ class Withdrawal(Base, SaveDeleteModelMixin):
 
     id = sql.Column(sql.Integer, primary_key=True)
     user_id = sql.Column(sql.BIGINT, sql.ForeignKey("user.chat_id"), nullable=False)
-    metamask_address = sql.Column(sql.String(64), nullable=False)
+    blockchain_address = sql.Column(sql.String(64), nullable=False)
     amount = sql.Column(sql.DECIMAL, default=0, nullable=False)
     create_time = sql.Column(sql.DateTime, default=datetime.datetime.utcnow)
     close_time = sql.Column(sql.DateTime)
