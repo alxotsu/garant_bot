@@ -133,7 +133,8 @@ def get_token_contract(web3, abi):
     return web3.eth.contract(address=addr, abi=abi)
 
 
-def process_withdrawal(withdrawal, strings):
+def process_withdrawal(withdrawal, language):
+    strings = get_strings(language)
     web3 = get_web3_remote_provider()
     abi = [
         {
@@ -152,9 +153,12 @@ def process_withdrawal(withdrawal, strings):
     try:
         assert withdrawal.amount < get_system_balance()
 
-        amount = int(
-            withdrawal.amount * Decimal(str(1 - config.TAX_PERCENT / 100)) * 10**18
-        )
+        if withdrawal.user.referral_id:
+            tax = config.TAX_PERCENT * (1 - config.REFERRAL_TAX_SALE / 100)
+        else:
+            tax = config.TAX_PERCENT
+
+        amount = int(withdrawal.amount * (1 - Decimal(str(tax)) / 100) * 10**18)
 
         transfer = contract.functions.transfer(
             withdrawal.blockchain_address, amount
@@ -183,6 +187,22 @@ def process_withdrawal(withdrawal, strings):
             ),
             parse_mode="HTML",
         )
+
+        if withdrawal.user.referral_id:
+            referral = queries.get_user(withdrawal.user.referral_id)
+            strings = get_strings(referral.language)
+            amount = amount / 10**18
+            bonus = Decimal(str(amount * (1 - config.REFERRAL_BONUS / 100)))
+            referral.balance += bonus
+            referral.save()
+            bot.send_message(
+                referral.chat_id,
+                strings.referral_withdrawal.format(
+                    amount=amount,
+                    bonus=bonus,
+                ),
+                parse_mode="HTML",
+            )
 
     except:
         withdrawal.user.balance += withdrawal.amount

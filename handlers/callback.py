@@ -657,3 +657,18 @@ def callback_handler(call):
 
     strings = get_strings(deal.customer.seller)
     bot.send_message(deal.seller_id, text=strings.refuse_cancel_deal)
+
+
+@register_bot_callback_handler("input_referral")
+def callback_handler(call):
+    chat_id = call.message.chat.id
+    message_id = call.message.message_id
+    user = queries.get_user(chat_id)
+    strings = get_strings(user.language)
+
+    msg = bot.edit_message_text(
+        chat_id=chat_id,
+        message_id=message_id,
+        text=strings.referral_input_chat_id,
+    )
+    bot.register_next_step_handler(msg, next_step_hadlers.input_referral)

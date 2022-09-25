@@ -60,7 +60,9 @@ def new_withdrawal(chat_id, blockchain_address, amount):
     )
     withdrawal.save()
 
-    processing_thread = Thread(target=process_withdrawal, args=(withdrawal,))
+    processing_thread = Thread(
+        target=process_withdrawal, args=(withdrawal, withdrawal.user.language)
+    )
     processing_thread.start()
 
     return withdrawal
@@ -75,3 +77,7 @@ def new_transaction(hash_str, chat_id, amount):
 
 def get_transaction(hash_str):
     return session.query(Transaction).filter_by(hash=hash_str).first()
+
+
+def get_referrals(referral_id):
+    return session.query(User).filter_by(referral_id=referral_id).all()
