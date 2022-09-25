@@ -290,7 +290,7 @@ class en:
     )
 
     # referrals
-    referral_button = "Реферальная программа"
+    referral_button = "Referral program"
     referral_info = (
         "💰 Invited users receive a {sale}% discount on commission when withdrawing USDT from the balance.\n\n"
         "💰 With each withdrawal of funds by an invited user, "
