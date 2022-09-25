@@ -183,6 +183,19 @@ def send_text(message):
                 ),
             )
 
+        elif message.text == strings.referral_button:
+            bot.send_message(
+                chat_id,
+                text=strings.referral_info.format(
+                    sale=config.REFERRAL_TAX_SALE,
+                    bonus=config.REFERRAL_BONUS,
+                    chat_id=chat_id,
+                    referrals_count=len(queries.get_referrals(chat_id)),
+                ),
+                reply_markup=keyboards.referral(strings, user),
+                parse_mode="HTML",
+            )
+
     except Exception:
         bot.send_message(
             chat_id,

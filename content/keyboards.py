@@ -8,6 +8,7 @@ def menu(strings):
         types.KeyboardButton(strings.profile),
         types.KeyboardButton(strings.about_us),
         types.KeyboardButton(strings.perform_deal),
+        types.KeyboardButton(strings.referral_button),
         types.KeyboardButton(strings.switch_language),
     )
     return menu_kb
@@ -195,3 +196,17 @@ def choice_accept_cancel(strings):
         types.InlineKeyboardButton(strings.reject, callback_data="refuse_close"),
     )
     return choice_accept_cancel_kb
+
+
+def referral(strings, user):
+    referral_kb = types.InlineKeyboardMarkup()
+    if user.referral_id is None:
+        referral_kb.add(
+            types.InlineKeyboardButton(
+                strings.referral_input_chat_id_button, callback_data="input_referral"
+            ),
+        )
+    referral_kb.add(
+        types.InlineKeyboardButton(strings.back, callback_data="self_delete"),
+    )
+    return referral_kb

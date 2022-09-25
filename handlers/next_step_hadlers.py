@@ -294,3 +294,35 @@ def add_review(message):
             text=strings.review_sent_seller.format(text=message.text),
             reply_markup=keyboards.menu(strings),
         )
+
+
+def input_referral(message):
+    user = queries.get_user(message.chat.id)
+    strings = get_strings(user.language)
+    if message.text.startswith("-") or not message.text.isdigit():
+        bot.send_message(message.chat.id, text=strings.cancel)
+        return
+
+    chat_id = int(message.text)
+    if chat_id == message.chat.id:
+        bot.send_message(message.chat.id, text=strings.referral_yourself_error)
+        return
+
+    ref_user = queries.get_user(chat_id)
+    if ref_user is None:
+        bot.send_message(message.chat.id, text=strings.user_not_found)
+        return
+
+    user.referral_id = chat_id
+    user.save()
+
+    bot.send_message(message.chat.id, text=strings.referral_success)
+
+    user = queries.get_user(chat_id)
+    strings = get_strings(user.language)
+    bot.send_message(
+        chat_id,
+        text=strings.new_referral.format(
+            referrals_count=len(queries.get_referrals(chat_id))
+        ),
+    )

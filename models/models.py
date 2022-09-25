@@ -38,6 +38,7 @@ class User(Base, SaveDeleteModelMixin):
     blockchain_address = sql.Column(sql.String(64))
     banned = sql.Column(sql.Boolean, nullable=False, default=False)
     language = sql.Column(sql.Enum(Language), default=Language.ru, nullable=False)
+    referral_id = sql.Column(sql.BIGINT, sql.ForeignKey("user.chat_id"))
 
     customer_deal = sql.orm.relationship(
         "Deal",

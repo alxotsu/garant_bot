@@ -288,3 +288,28 @@ class en:
         "At the same time, users can request the withdrawal of {users_balance} USDT.\n\n"
         "{conclusion}"
     )
+
+    # referrals
+    referral_button = "Реферальная программа"
+    referral_info = (
+        "💰 Invited users receive a {sale}% discount on commission when withdrawing USDT from the balance.\n\n"
+        "💰 With each withdrawal of funds by an invited user, "
+        "the invited user receives a bonus in the amount of {bonus}% of the withdrawal amount to his balance.\n\n"
+        "🧾 Your chatId <b><code>{chat_id}</code></b>.\n"
+        "🧾 To invite a user, they must enter your chatId in this section.\n"
+        "🧾 Your invitation was confirmed by {referrals_count} users."
+    )
+    referral_input_chat_id_button = "Input ChatID"
+    referral_input_chat_id = (
+        "Enter the Chat ID of the user who invited you. "
+        "To cancel, write \"-\" without quotes."
+    )
+    referral_yourself_error = "⛔️ You can't invite yourself."
+    referral_success = "The referral program is enabled."
+    new_referral = (
+        "A new user has entered your chatId as an invitation\n"
+        "Your invitation has been confirmed by {referrals_count} users."
+    )
+    referral_withdrawal = (
+        "Your referral has withdrawn {amount} USDT. You get a {bonus} USDT bonus."
+    )
