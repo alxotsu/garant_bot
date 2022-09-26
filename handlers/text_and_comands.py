@@ -189,7 +189,7 @@ def send_text(message):
                 text=strings.referral_info.format(
                     sale=config.REFERRAL_TAX_SALE,
                     bonus=config.REFERRAL_BONUS,
-                    chat_id=chat_id,
+                    referral_code=user.referral_code,
                     referrals_count=len(queries.get_referrals(chat_id)),
                 ),
                 reply_markup=keyboards.referral(strings, user),

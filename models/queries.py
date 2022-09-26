@@ -20,7 +20,10 @@ def get_all_users_count():
 def new_user(chat_id):
     user = get_user(chat_id)
     if user is None:
-        user = User(chat_id=chat_id)
+        user = User(
+            chat_id=chat_id,
+            referral_code=str(chat_id),
+        )
         user.save()
     return user
 
@@ -81,3 +84,7 @@ def get_transaction(hash_str):
 
 def get_referrals(referral_id):
     return session.query(User).filter_by(referral_id=referral_id).all()
+
+
+def get_user_by_referral_code(referral_code):
+    return session.query(User).filter_by(referral_code=referral_code).first()

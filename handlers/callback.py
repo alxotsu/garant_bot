@@ -669,6 +669,21 @@ def callback_handler(call):
     msg = bot.edit_message_text(
         chat_id=chat_id,
         message_id=message_id,
-        text=strings.referral_input_chat_id,
+        text=strings.referral_input_referral_code,
     )
     bot.register_next_step_handler(msg, next_step_hadlers.input_referral)
+
+
+@register_bot_callback_handler("change_referral")
+def callback_handler(call):
+    chat_id = call.message.chat.id
+    message_id = call.message.message_id
+    user = queries.get_user(chat_id)
+    strings = get_strings(user.language)
+
+    msg = bot.edit_message_text(
+        chat_id=chat_id,
+        message_id=message_id,
+        text=strings.edit_referral,
+    )
+    bot.register_next_step_handler(msg, next_step_hadlers.change_referral)

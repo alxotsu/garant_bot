@@ -299,30 +299,46 @@ def add_review(message):
 def input_referral(message):
     user = queries.get_user(message.chat.id)
     strings = get_strings(user.language)
-    if message.text.startswith("-") or not message.text.isdigit():
+    if message.text.startswith("-"):
         bot.send_message(message.chat.id, text=strings.cancel)
         return
 
-    chat_id = int(message.text)
-    if chat_id == message.chat.id:
+    ref_code = message.text.upper()
+    referral = queries.get_user_by_referral_code(ref_code)
+    if referral is None:
+        bot.send_message(message.chat.id, text=strings.referral_not_found_error)
+        return
+
+    if referral.chat_id == message.chat.id:
         bot.send_message(message.chat.id, text=strings.referral_yourself_error)
         return
 
-    ref_user = queries.get_user(chat_id)
-    if ref_user is None:
-        bot.send_message(message.chat.id, text=strings.user_not_found)
-        return
-
-    user.referral_id = chat_id
+    user.referral_id = referral.chat_id
     user.save()
 
     bot.send_message(message.chat.id, text=strings.referral_success)
 
-    user = queries.get_user(chat_id)
-    strings = get_strings(user.language)
+    strings = get_strings(referral.language)
     bot.send_message(
-        chat_id,
+        referral.chat_id,
         text=strings.new_referral.format(
-            referrals_count=len(queries.get_referrals(chat_id))
+            referrals_count=len(queries.get_referrals(referral.chat_id))
         ),
     )
+
+
+def change_referral(message):
+    user = queries.get_user(message.chat.id)
+    strings = get_strings(user.language)
+    if message.text.startswith("-") or message.text.isdigit():
+        bot.send_message(message.chat.id, text=strings.cancel)
+        return
+
+    ref_code = message.text.upper()
+    if queries.get_user_by_referral_code(ref_code) not in (None, user):
+        bot.send_message(message.chat.id, text=strings.referral_not_unique_error)
+        return
+
+    user.referral_code = ref_code
+    user.save()
+    bot.send_message(message.chat.id, text=strings.edit_referral_success)

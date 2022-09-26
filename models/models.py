@@ -39,6 +39,7 @@ class User(Base, SaveDeleteModelMixin):
     banned = sql.Column(sql.Boolean, nullable=False, default=False)
     language = sql.Column(sql.Enum(Language), default=Language.ru, nullable=False)
     referral_id = sql.Column(sql.BIGINT, sql.ForeignKey("user.chat_id"))
+    referral_code = sql.Column(sql.String(16), unique=True, nullable=False)
 
     customer_deal = sql.orm.relationship(
         "Deal",
