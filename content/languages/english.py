@@ -295,19 +295,27 @@ class en:
         "💰 Invited users receive a {sale}% discount on commission when withdrawing USDT from the balance.\n\n"
         "💰 With each withdrawal of funds by an invited user, "
         "the invited user receives a bonus in the amount of {bonus}% of the withdrawal amount to his balance.\n\n"
-        "🧾 Your chatId <b><code>{chat_id}</code></b>.\n"
-        "🧾 To invite a user, they must enter your chatId in this section.\n"
+        "🧾 Your promo code is <b><code>{referral_code}</code></b>.\n"
+        "🧾 To invite a user, they must enter your promo code in this section.\n"
         "🧾 Your invitation was confirmed by {referrals_count} users."
     )
-    referral_input_chat_id_button = "Input ChatID"
-    referral_input_chat_id = (
-        "Enter the Chat ID of the user who invited you. "
+    edit_referral_button = "Change your promo code"
+    edit_referral = (
+        "Enter your new promo code. The promo code must contain at least one letter."
         "To cancel, write \"-\" without quotes."
     )
+    referral_not_unique_error = "⛔️ This promo code is already taken."
+    edit_referral_success = "Your promo code has been changed."
+    referral_input_referral_code_button = "Input promo code"
+    referral_input_referral_code = (
+        "Enter the promo code of the user who invited you. "
+        "To cancel, write \"-\" without quotes."
+    )
+    referral_not_found_error = "⛔️ No user with such referral code was found."
     referral_yourself_error = "⛔️ You can't invite yourself."
     referral_success = "The referral program is enabled."
     new_referral = (
-        "A new user has entered your chatId as an invitation\n"
+        "A new user has entered your promo code.\n"
         "Your invitation has been confirmed by {referrals_count} users."
     )
     referral_withdrawal = (

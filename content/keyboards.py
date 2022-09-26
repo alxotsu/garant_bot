@@ -203,10 +203,14 @@ def referral(strings, user):
     if user.referral_id is None:
         referral_kb.add(
             types.InlineKeyboardButton(
-                strings.referral_input_chat_id_button, callback_data="input_referral"
+                strings.referral_input_referral_code_button,
+                callback_data="input_referral",
             ),
         )
     referral_kb.add(
+        types.InlineKeyboardButton(
+            strings.edit_referral_button, callback_data="change_referral"
+        ),
         types.InlineKeyboardButton(strings.back, callback_data="self_delete"),
     )
     return referral_kb
