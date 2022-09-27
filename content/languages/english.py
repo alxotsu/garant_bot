@@ -4,7 +4,7 @@ from models.models import Deal
 class en:
     # technical
     seller = "seller"
-    customer = "customer"
+    customer = "buyer"
     welcome = "✅ Welcome, {username}!"
     welcome_admin = "✅ {username}, you are logged in."
     cancel = "Cancel..."
@@ -55,9 +55,9 @@ class en:
     blockchain_address_sets_up = "✅ The address in the blockchain is set."
 
     # input balance
-    input_balance_button = "Replenishment of the balance"
+    input_balance_button = "Balance top up"
     wallet_input = (
-        "⚠️ Balance replenishment\n"
+        "⚠️ Balance top up\n"
         "To replenish the balance, send the desired amount to the service wallet in Binance smart chain.\n"
         "After that, you need to copy the transaction ID and paste it here.\n\n"
         "👉 Wallet address - <b><code>{address}</code></b>\n\n To cancel, write \"-\" without quotes."
@@ -107,7 +107,7 @@ class en:
     )
     user_banned = "⛔️ The user with the Chat ID entered is blocked."
     customer_preview = (
-        "🧾 Profile:\n\n {user}\n\n🔥In this deal you will be the customer."
+        "🧾 Profile:\n\n {user}\n\n🔥In this deal you will be the buyer."
     )
     seller_preview = "🧾 Profile:\n\n {user}\n\n🔥In this deal you will be the seller."
     propose_deal = "📝 Offer a deal"
@@ -117,7 +117,7 @@ class en:
     deal_accepted = "💰 The deal {deal_info}"
     format_deal_info = (
         "№{deal_id}\n"
-        "❕ The customer - @{customer_username} (ChatID <b><code>{customer_id}</code></b>)\n"
+        "❕ The buyer - @{customer_username} (ChatID <b><code>{customer_id}</code></b>)\n"
         "❕ The seller - @{seller_username} (ChatID <b><code>{seller_id}</code></b>)\n"
         "💰 Deal amount - {amount} USDT\n"
         "📊 Deal status - {status}"
@@ -153,7 +153,7 @@ class en:
         "💳 The required balance is {amount} USDT\n\nYou need to cancel the deal."
     )
     fund_payed_seller = (
-        "✅ The customer paid for the deal! Now you need to transfer the goods."
+        "✅ The buyer paid for the deal! Now you need to transfer the goods."
     )
     fund_payed_customer = (
         "✅ The product has been successfully paid for, expect to receive the product."
@@ -198,15 +198,15 @@ class en:
     )
     cancel_waiting = "💥 Cancel waiting"
     review_sent_customer = "📝 The review was successfully left."
-    review_sent_seller = "📝 The customer left a review about you.\n\n{text}"
+    review_sent_seller = "📝 The buyer left a review about you.\n\n{text}"
     seller_cancel_review_customer = (
         "❄️ The seller did not want to wait for a review. The deal is completed."
     )
     seller_cancel_review_seller = (
-        "❄️The waiting is canceled, the customer can no longer leave a review."
+        "❄️The waiting is canceled, the buyer can no longer leave a review."
     )
     customer_cancel_review_customer = "❄️ The deal has been successfully completed."
-    customer_cancel_review_seller = "❄️ The customer refused to leave a review."
+    customer_cancel_review_seller = "❄️ The buyer refused to leave a review."
 
     # disputes
     init_dispute = "Open dispute"
@@ -224,7 +224,7 @@ class en:
         "🧾 Information about the deal {deal}\n\nWho is right in this dispute?"
     )
     customer_dispute_solve_confirm = (
-        "The customer will receive the money, and the deal will be canceled.\n"
+        "The buyer will receive the money, and the deal will be canceled.\n"
         "To confirm, enter the deal ID, to cancel, enter \"-\" without quotes.",
     )
     seller_dispute_solve_confirm = (
@@ -293,8 +293,8 @@ class en:
     referral_button = "Referral program"
     referral_info = (
         "💰 Invited users receive a {sale}% discount on commission when withdrawing USDT from the balance.\n\n"
-        "💰 With each withdrawal of funds by an invited user, "
-        "the invited user receives a bonus in the amount of {bonus}% of the withdrawal amount to his balance.\n\n"
+        "💰 With each withdrawal of funds by your referral, "
+        "you receive a bonus of {bonus}% of the withdrawal amount to your balance.\n\n"
         "🧾 Your promo code is <b><code>{referral_code}</code></b>.\n"
         "🧾 To invite a user, they must enter your promo code in this section.\n"
         "🧾 Your invitation was confirmed by {referrals_count} users."
