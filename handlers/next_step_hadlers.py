@@ -259,7 +259,7 @@ def set_price(message):
 def add_review(message):
     user = queries.get_user(message.chat.id)
     strings = get_strings(user.language)
-    deal = queries.get_user(message.chat.id).customer_deal
+    deal = user.customer_deal
     if deal.status != Deal.Status.review:
         return
 
