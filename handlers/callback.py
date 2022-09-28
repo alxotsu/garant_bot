@@ -552,7 +552,7 @@ def callback_handler(call):
     deal.save()
 
     bot.send_message(
-        deal.chat_id,
+        deal.customer_id,
         text=strings.fund_payed_customer,
     )
     strings = get_strings(deal.seller.language)
