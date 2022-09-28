@@ -92,7 +92,7 @@ def send_text(message):
 
         elif message.text == strings.perform_deal:
             bot.send_message(
-                chat_id, strings.in_this_deal_you_are, reply_markup=keyboards.init_offer
+                chat_id, strings.in_this_deal_you_are, reply_markup=keyboards.init_offer(strings)
             )
 
         elif message.text == strings.about_us:
