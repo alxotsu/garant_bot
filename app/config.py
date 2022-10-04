@@ -6,6 +6,7 @@ ADMIN_FIRST_CHAT_ID = int(environ["ADMIN_1"])
 ADMIN_SECOND_CHAT_ID = int(environ.setdefault("ADMIN_2", environ["ADMIN_1"]))
 BOT_CHAT_LINK = environ["BOT_CHAT_LINK"]
 INSTRUCTION_LINK = environ["INSTRUCTION_LINK"]
+ADMIN_EMAIL = environ["ADMIN_EMAIL"]
 ADMIN_USERNAME = environ["ADMIN_USERNAME"]
 TAX_PERCENT = float(environ["TAX_PERCENT"])
 REFERRAL_TAX_SALE = float(environ["REFERRAL_TAX_SALE"])

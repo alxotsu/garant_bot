@@ -102,6 +102,7 @@ def send_text(message):
                     admin=config.ADMIN_USERNAME,
                     chat=config.BOT_CHAT_LINK,
                     instruction=config.INSTRUCTION_LINK,
+                    email=config.ADMIN_EMAIL
                 ),
             )
 
