@@ -38,8 +38,10 @@ class en:
     )
     about_us = "⭐️ About us"
     about = (
-        "For all questions: @{admin}\nOur chat: {chat}\n"
-        "Instructions for use: {instruction}\n"
+        "For all questions: @{admin}\n"
+        "Email: {email}\n"
+        "Our chat: {chat}\n"
+        "Instructions for use: {instruction}"
     )
     show_offers = "💵 Past offers"
     show_offers_where_you_are = "Withdraw your latest trades where are you..."
