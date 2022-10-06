@@ -1,6 +1,6 @@
 from os import environ
 
-DATABASE_URL = environ["DATABASE_URI"]
+DATABASE_URL = environ["DATABASE_URL"].replace("postgres", "postgresql")
 BOT_TOKEN = environ["BOT_TOKEN"]
 ADMIN_FIRST_CHAT_ID = int(environ["ADMIN_1"])
 ADMIN_SECOND_CHAT_ID = int(environ.setdefault("ADMIN_2", environ["ADMIN_1"]))
