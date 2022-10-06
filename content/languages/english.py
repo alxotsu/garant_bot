@@ -43,9 +43,9 @@ class en:
         "Our chat: {chat}\n"
         "Instructions for use: {instruction}"
     )
-    show_offers = "💵 Past offers"
-    show_offers_where_you_are = "Withdraw your latest trades where are you..."
-    no_offers = "⛔️ No offers detected."
+    show_offers = "💵 Deals"
+    show_offers_where_you_are = "Show your latest deals where are you..."
+    no_offers = "⛔️ No deals detected."
     offer_info = "💠 With @{username} (ChatID - {user_id}) for {amount} USDT.\n\n"
     switch_language = "🇷🇺 сменить язык"
 
