@@ -2,11 +2,9 @@ import re
 from decimal import Decimal
 from datetime import datetime
 
-from web3 import Web3
-from web3.middleware import geth_poa_middleware
-
 from app import config
 from app.bot import bot
+from app import transfers
 from models import queries
 from content.languages import get_strings
 
@@ -120,70 +118,18 @@ def format_deal_info(deal, strings):
     )
 
 
-def get_web3_remote_provider():
-    web3 = Web3(Web3.HTTPProvider(config.BLOCKCHAIN_RPC_LINK))
-    web3.middleware_onion.inject(geth_poa_middleware, layer=0)
-    web3.eth.default_account = config.SYSTEM_WALLET_ADDRESS
-
-    return web3
-
-
-def get_token_contract(web3, abi):
-    addr = web3.toChecksumAddress(config.BLOCKCHAIN_TOKEN_ADDRESS)
-    return web3.eth.contract(address=addr, abi=abi)
-
-
 def process_withdrawal(withdrawal, language):
     strings = get_strings(language)
-    web3 = get_web3_remote_provider()
-    abi = [
-        {
-            "constant": False,
-            "inputs": [
-                {"name": "_to", "type": "address"},
-                {"name": "_value", "type": "uint256"},
-            ],
-            "name": "transfer",
-            "outputs": [{"name": "", "type": "bool"}],
-            "type": "function",
-        }
-    ]
-    contract = get_token_contract(web3, abi)
 
     try:
-        assert withdrawal.amount < get_system_balance()
-
-        if withdrawal.user.referral_id:
-            tax = config.TAX_PERCENT * (1 - config.REFERRAL_TAX_SALE / 100)
-        else:
-            tax = config.TAX_PERCENT
-
-        amount = int(withdrawal.amount * (1 - Decimal(str(tax)) / 100) * 10**18)
-
-        transfer = contract.functions.transfer(
-            withdrawal.blockchain_address, amount
-        ).buildTransaction(
-            {
-                "chainId": config.BLOCKCHAIN_ID,
-                "gas": config.OUTPUT_GAS_COUNT,
-                "gasPrice": web3.eth.gasPrice,
-                "nonce": web3.eth.getTransactionCount(config.SYSTEM_WALLET_ADDRESS),
-            }
-        )
-        account = web3.eth.account.privateKeyToAccount(config.SYSTEM_WALLET_PRIVATE_KEY)
-        signed_transfer = account.signTransaction(transfer)
-        sent_transfer = web3.eth.sendRawTransaction(signed_transfer.rawTransaction)
-
-        withdrawal.passed = True
-        withdrawal.close_time = datetime.utcnow()
-        withdrawal.save()
+        trans_hex = transfers.process_trc20_usdt_withdrawal(withdrawal)
 
         bot.send_message(
             withdrawal.user_id,
             strings.withdrawal_complete.format(
                 amount=withdrawal.amount,
                 address=withdrawal.blockchain_address,
-                hex_hash=sent_transfer.hex(),
+                hex_hash=trans_hex.hex(),
             ),
             parse_mode="HTML",
         )
@@ -191,20 +137,19 @@ def process_withdrawal(withdrawal, language):
         if withdrawal.user.referral_id:
             referral = queries.get_user(withdrawal.user.referral_id)
             strings = get_strings(referral.language)
-            amount = amount / 10**18
-            bonus = Decimal(str(amount * (1 - config.REFERRAL_BONUS / 100)))
+            bonus = withdrawal.amount * (1 - Decimal(str(config.REFERRAL_BONUS)) / 100)
             referral.balance += bonus
             referral.save()
             bot.send_message(
                 referral.chat_id,
                 strings.referral_withdrawal.format(
-                    amount=amount,
+                    amount=withdrawal.amount,
                     bonus=bonus,
                 ),
                 parse_mode="HTML",
             )
 
-    except:
+    except Exception as e:
         withdrawal.user.balance += withdrawal.amount
         withdrawal.user.save()
         withdrawal.passed = False
@@ -212,30 +157,12 @@ def process_withdrawal(withdrawal, language):
         withdrawal.save()
         bot.send_message(
             withdrawal.user_id,
-            strings.withdrawal_error.format(amount=withdrawal.amount),
+            strings.withdrawal_error.format(
+                amount=withdrawal.amount, admin=config.ADMIN_USERNAME
+            ),
         )
+        raise
 
 
 def is_wallet_amount(text):
     return bool(re.fullmatch(r"\d+(\.\d+)?", text))
-
-
-def get_system_balance():
-    web3 = get_web3_remote_provider()
-
-    abi = [
-        {
-            "constant": True,
-            "inputs": [{"name": "_owner", "type": "address"}],
-            "name": "balanceOf",
-            "outputs": [{"name": "balance", "type": "uint256"}],
-            "payable": False,
-            "type": "function",
-        }
-    ]
-
-    contract = get_token_contract(web3, abi)
-
-    balance = contract.functions.balanceOf(config.SYSTEM_WALLET_ADDRESS).call()
-
-    return Decimal(balance) / 10**18
