@@ -5,7 +5,7 @@ from telebot import types
 from models import queries
 from handlers import next_step_hadlers
 from app.bot import bot
-from app import config
+from app import config, transfers
 from app import functions
 from content.languages import get_strings
 from content import keyboards
@@ -92,7 +92,9 @@ def send_text(message):
 
         elif message.text == strings.perform_deal:
             bot.send_message(
-                chat_id, strings.in_this_deal_you_are, reply_markup=keyboards.init_offer(strings)
+                chat_id,
+                strings.in_this_deal_you_are,
+                reply_markup=keyboards.init_offer(strings),
             )
 
         elif message.text == strings.about_us:
@@ -102,7 +104,7 @@ def send_text(message):
                     admin=config.ADMIN_USERNAME,
                     chat=config.BOT_CHAT_LINK,
                     instruction=config.INSTRUCTION_LINK,
-                    email=config.ADMIN_EMAIL
+                    email=config.ADMIN_EMAIL,
                 ),
             )
 
@@ -157,7 +159,7 @@ def send_text(message):
             if not functions.check_admin_permission(message.chat.id):
                 return
 
-            system_balance = functions.get_system_balance()
+            system_balance = transfers.check_trc20_usdt_system_balance()
             users_balance = 0
             for user in queries.get_all_users():
                 if user.balance < 1:

@@ -60,7 +60,7 @@ class en:
     input_balance_button = "Balance top up"
     wallet_input = (
         "⚠️ Balance top up\n"
-        "To replenish the balance, send the desired amount to the service wallet in Binance smart chain.\n"
+        "To replenish the balance, send the desired amount to the service wallet in TRC20.\n"
         "After that, you need to copy the transaction ID and paste it here.\n\n"
         "👉 Wallet address - <b><code>{address}</code></b>\n\n To cancel, write \"-\" without quotes."
     )
@@ -82,8 +82,9 @@ class en:
     perform_withdrawal = "✅ The withdrawal request has been sent successfully."
     withdrawal_error = (
         "⛔️ Withdrawal of {amount} USDT failed."
-        " Check the correctness of the entered wallet address."
-        " in Binance smart chain in your profile and try again."
+        " Check the correctness of the entered wallet address"
+        " in TRC20 in your profile and try again.\n"
+        "If that's exactly not the problem, write to the support service: {admin}"
     )
     minimal_withdrawal_amount = "⛔️ The minimum withdrawal amount is 1 USDT."
     not_enough_on_balance = (
@@ -108,9 +109,7 @@ class en:
         "participating in the deal at the moment."
     )
     user_banned = "⛔️ The user with the Chat ID entered is blocked."
-    customer_preview = (
-        "🧾 Profile:\n\n {user}\n\n🔥In this deal you will be the buyer."
-    )
+    customer_preview = "🧾 Profile:\n\n {user}\n\n🔥In this deal you will be the buyer."
     seller_preview = "🧾 Profile:\n\n {user}\n\n🔥In this deal you will be the seller."
     propose_deal = "📝 Offer a deal"
     deal_proposal_sent = "✅ The offer to conduct the deal has been sent."

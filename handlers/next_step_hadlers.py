@@ -1,11 +1,10 @@
 from decimal import Decimal
 
 from telebot import types
-from web3.exceptions import TransactionNotFound
 
 from app.bot import bot
 from app import functions
-from app import config
+from app import transfers
 from content import keyboards
 from content.languages import get_strings
 from models import queries, Deal
@@ -118,46 +117,16 @@ def register_transaction_hash(message):
         bot.send_message(message.chat.id, text=strings.cancel)
         return
 
-    hash_str = message.text[2:]
+    hash_str = message.text
+    transaction = transfers.check_trc20_usdt_transaction(hash_str, user)
 
-    if queries.get_transaction(hash_str) is not None:
+    if isinstance(transaction, str):
+        bot.send_message(message.chat.id, text=getattr(strings, transaction))
+    else:
         bot.send_message(
-            message.chat.id, text=strings.this_transaction_already_registered
+            message.chat.id,
+            text=strings.complete_input.format(amount=transaction.amount),
         )
-        return
-
-    web3 = functions.get_web3_remote_provider()
-    try:
-        transaction = web3.eth.get_transaction(bytes.fromhex(hash_str))
-    except TransactionNotFound:
-        bot.send_message(message.chat.id, text=strings.transaction_not_found)
-        return
-
-    abi = [
-        {
-            "constant": False,
-            "inputs": [
-                {"name": "to", "type": "address"},
-                {"name": "value", "type": "uint256"},
-            ],
-            "name": "transfer",
-            "outputs": [{"name": "", "type": "bool"}],
-            "type": "function",
-        }
-    ]
-    contract = functions.get_token_contract(web3, abi)
-    transaction_info = contract.decode_function_input(transaction.input)[1]
-
-    if transaction_info["to"] != config.SYSTEM_WALLET_ADDRESS:
-        bot.send_message(message.chat.id, text=strings.incorrect_recipient)
-        return
-
-    user = queries.get_user(message.chat.id)
-    amount = Decimal(str(transaction_info["value"] / 10**18))
-    queries.new_transaction(hash_str, user.chat_id, amount)
-    user.balance += amount
-    user.save()
-    bot.send_message(message.chat.id, text=strings.complete_input.format(amount=amount))
 
 
 def change_address(message):
