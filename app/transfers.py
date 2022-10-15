@@ -7,7 +7,7 @@ from web3.exceptions import TransactionNotFound
 from tronpy import Tron
 from tronpy.keys import PrivateKey
 import requests
-import config
+from app import config
 from models import queries
 
 
