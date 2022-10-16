@@ -567,7 +567,7 @@ def callback_handler(call):
     chat_id = call.message.chat.id
     user = queries.get_user(chat_id)
     strings = get_strings(user.language)
-    deal = user.seller_deal
+    deal = user.customer_deal
 
     if deal.status != Deal.Status.review:
         return
