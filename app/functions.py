@@ -129,7 +129,7 @@ def process_withdrawal(withdrawal, language):
             strings.withdrawal_complete.format(
                 amount=withdrawal.amount,
                 address=withdrawal.blockchain_address,
-                hex_hash=trans_hex.hex(),
+                hex_hash=trans_hex,
             ),
             parse_mode="HTML",
         )
