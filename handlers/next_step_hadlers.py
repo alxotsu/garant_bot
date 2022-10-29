@@ -250,7 +250,6 @@ def add_review(message):
     else:
         review = message.text
 
-    offer = queries.new_offer(deal, review)
     if review is not None:
         bot.send_message(
             message.chat.id,
@@ -259,10 +258,11 @@ def add_review(message):
         )
         strings = get_strings(deal.seller.language)
         bot.send_message(
-            offer.seller_id,
+            deal.seller_id,
             text=strings.review_sent_seller.format(text=message.text),
             reply_markup=keyboards.menu(strings),
         )
+    queries.new_offer(deal, review)
 
 
 def input_referral(message):
