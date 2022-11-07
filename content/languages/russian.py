@@ -88,7 +88,7 @@ class ru:
         " в TRC20 в своём профиле и повторите попытку.\n"
         "Если проблема точно не в этом, напишите в службу поддержки: {admin}"
     )
-    minimal_withdrawal_amount = "⛔️ Минимальная сумма для вывода 1 USDT."
+    minimal_withdrawal_amount = "⛔️ Минимальная сумма для вывода 2 USDT."
     not_enough_on_balance = "⛔️ На балансе недостаточно средств для вывода."
     withdrawal_complete = (
         "{amount} USDT было выведено на кошелёк - "

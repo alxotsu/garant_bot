@@ -97,7 +97,7 @@ def output(message):
         bot.send_message(message.chat.id, text=strings.not_enough_on_balance)
         return
 
-    if float(output_size) < 1:
+    if float(output_size) < 2:
         bot.send_message(
             message.chat.id,
             text=strings.minimal_withdrawal_amount,

@@ -12,11 +12,20 @@ from models import queries
 
 
 def get_taxed_amount(withdrawal):
-    tax = config.TAX_PERCENT
+    if withdrawal.amount < 1000:
+        tax = 0.02
+        minimum = 2
+    else:
+        tax = 0.01
+        minimum = 20
+
     if withdrawal.user.referral_id:
         tax = tax * (1 - config.REFERRAL_TAX_SALE / 100)
 
-    return withdrawal.amount * (1 - Decimal(str(tax)) / 100)
+    royalty = withdrawal.amount * Decimal(str(tax))
+    royalty = max(minimum, royalty)
+
+    return withdrawal.amount - royalty
 
 
 def check_binance_usdt_transaction(trans_hash, user):
@@ -167,7 +176,7 @@ def check_trc20_usdt_system_balance():
 
 
 def process_trc20_usdt_withdrawal(withdrawal):
-    assert withdrawal.amount < check_trc20_usdt_system_balance()
+    #assert withdrawal.amount < check_trc20_usdt_system_balance()
 
     client = Tron()
     contract = client.get_contract('TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t')

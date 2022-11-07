@@ -86,7 +86,7 @@ class en:
         " in TRC20 in your profile and try again.\n"
         "If that's exactly not the problem, write to the support service: {admin}"
     )
-    minimal_withdrawal_amount = "⛔️ The minimum withdrawal amount is 1 USDT."
+    minimal_withdrawal_amount = "⛔️ The minimum withdrawal amount is 2 USDT."
     not_enough_on_balance = (
         "⛔️ There are not enough funds on the balance for withdrawal."
     )
