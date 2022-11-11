@@ -11,7 +11,7 @@ from app import config
 from models import queries
 
 
-def get_taxed_amount(withdrawal):
+def get_royalty(withdrawal):
     if withdrawal.amount < 1000:
         tax = 0.02
         minimum = 2
@@ -25,7 +25,7 @@ def get_taxed_amount(withdrawal):
     royalty = withdrawal.amount * Decimal(str(tax))
     royalty = max(minimum, royalty)
 
-    return withdrawal.amount - royalty
+    return royalty
 
 
 def check_binance_usdt_transaction(trans_hash, user):
@@ -115,7 +115,7 @@ def process_binance_usdt_withdrawal(withdrawal):
     addr = web3.toChecksumAddress("0x184BD594a5f06ABb86c75dFcCa588071dc11d6D0")
     contract = web3.eth.contract(address=addr, abi=abi)
 
-    amount = int(get_taxed_amount(withdrawal) * 10**18)
+    amount = int(get_royalty(withdrawal) * 10 ** 18)
 
     transfer = contract.functions.transfer(
         withdrawal.blockchain_address, amount
@@ -181,7 +181,7 @@ def process_trc20_usdt_withdrawal(withdrawal):
     client = Tron()
     contract = client.get_contract('TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t')
 
-    amount = get_taxed_amount(withdrawal) * 10**6
+    amount = (withdrawal.amount - get_royalty(withdrawal)) * 10 ** 6
     txn = (
         contract.functions.transfer(withdrawal.blockchain_address, int(amount))
         .with_owner(config.SYSTEM_WALLET_ADDRESS)

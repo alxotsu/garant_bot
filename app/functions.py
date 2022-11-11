@@ -137,7 +137,7 @@ def process_withdrawal(withdrawal, language):
         if withdrawal.user.referral_id:
             referral = queries.get_user(withdrawal.user.referral_id)
             strings = get_strings(referral.language)
-            bonus = withdrawal.amount * (1 - Decimal(str(config.REFERRAL_BONUS)) / 100)
+            bonus = transfers.get_royalty(withdrawal) * Decimal(str(config.REFERRAL_BONUS)) / 100
             referral.balance += bonus
             referral.save()
             bot.send_message(
