@@ -295,7 +295,7 @@ class en:
     referral_info = (
         "💰 Invited users receive a {sale}% discount on commission when withdrawing USDT from the balance.\n\n"
         "💰 With each withdrawal of funds by your referral, "
-        "you receive a bonus of {bonus}% of the withdrawal amount to your balance.\n\n"
+        "you receive a bonus of {bonus}% of the commission to your balance.\n\n"
         "🧾 Your promo code is <b><code>{referral_code}</code></b>.\n"
         "🧾 To invite a user, they must enter your promo code in this section.\n"
         "🧾 Your invitation was confirmed by {referrals_count} users."
