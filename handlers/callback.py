@@ -53,6 +53,15 @@ def callback_handler(call):
     user = queries.get_user(chat_id)
     strings = get_strings(user.language)
 
+    if user.blockchain_address is None:
+        bot.send_message(
+            chat_id=chat_id,
+            text=strings.must_set_address,
+            parse_mode="HTML",
+            reply_markup=keyboards.change_address(strings),
+        )
+        return
+
     msg = bot.edit_message_text(
         chat_id=chat_id,
         message_id=message_id,

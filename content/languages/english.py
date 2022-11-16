@@ -69,8 +69,10 @@ class en:
     this_transaction_already_registered = (
         "⛔️ This transaction has already been registered in the bot."
     )
+    must_set_address = "⛔️ First you have to set the address of your wallet in the profile."
     transaction_not_found = "⛔️ Transaction with such ID was not found."
     incorrect_recipient = "⛔️ The transfer was not made to the service's wallet."
+    incorrect_sender = "⛔️ The transfer was made from the wrong address that you specified in your profile."
     complete_input = "The balance was successfully replenished to {amount} USDT."
 
     # withdrawals

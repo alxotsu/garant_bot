@@ -146,13 +146,14 @@ def check_trc20_usdt_transaction(trans_hash, user):
         'https://apilist.tronscanapi.com/api/transaction-info',
         params={'hash': trans_hash},
     ).json()
-    if not transaction_info:
+    if not transaction_info or transaction_info['contractRet'] != 'SUCCESS':
         return "transaction_not_found"
 
-    address = transaction_info['tokenTransferInfo']['to_address']
-
-    if address != config.SYSTEM_WALLET_ADDRESS:
+    if transaction_info['tokenTransferInfo']['to_address'] != config.SYSTEM_WALLET_ADDRESS:
         return "incorrect_recipient"
+
+    if transaction_info['tokenTransferInfo']['from_address'] != user.blockchain_address:
+        return "incorrect_sender"
 
     amount = Decimal(transaction_info['tokenTransferInfo']['amount_str']) / 10**6
     transaction = queries.new_transaction(trans_hash, user.chat_id, amount)

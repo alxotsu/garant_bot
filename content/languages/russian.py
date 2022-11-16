@@ -71,8 +71,10 @@ class ru:
     this_transaction_already_registered = (
         "⛔️ Эта транзакция уже была зарегистрирована в боте."
     )
+    must_set_address = "⛔️ Сначала Вы должны установить адрес вашего кошелька в профиле."
     transaction_not_found = "⛔️ Транзакция с таким ID не найдена."
     incorrect_recipient = "⛔️ Перевод был совершён не на кошелёк сервиса."
+    incorrect_sender = "⛔️ Перевод был совершён не с того адреса, который Вы указали в профиле."
     complete_input = "Баланс был успешно пополнен на {amount} USDT."
 
     # withdrawals
