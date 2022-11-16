@@ -55,6 +55,8 @@ class en:
         "📄 Enter the wallet address.\nTo cancel, write \"-\" without quotes."
     )
     blockchain_address_sets_up = "✅ The address in the blockchain is set."
+    it_is_not_address = "⛔️ It's not a TRON wallet address."
+    unique_address_error = "⛔️This wallet already registered."
 
     # input balance
     input_balance_button = "Balance top up"

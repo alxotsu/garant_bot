@@ -17,8 +17,12 @@ session = sessionmaker(bind=engine)()
 
 class SaveDeleteModelMixin:
     def save(self):
-        session.add(self)
-        session.commit()
+        try:
+            session.add(self)
+            session.commit()
+        except:
+            session.rollback()
+            raise
         return self
 
     def delete(self):

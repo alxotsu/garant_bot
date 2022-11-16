@@ -1,6 +1,8 @@
 from decimal import Decimal
 
 from telebot import types
+from tronpy import Tron
+from sqlalchemy.exc import IntegrityError
 
 from app.bot import bot
 from app import functions
@@ -136,9 +138,17 @@ def change_address(message):
         bot.send_message(message.chat.id, text=strings.cancel)
         return
 
+    if not Tron.is_address(message.text):
+        bot.send_message(message.chat.id, text=strings.it_is_not_address)
+        return
+
     user = queries.get_user(message.chat.id)
     user.blockchain_address = message.text
-    user.save()
+    try:
+        user.save()
+    except IntegrityError:
+        bot.send_message(message.chat.id, text=strings.unique_address_error)
+        return
     bot.send_message(message.chat.id, text=strings.blockchain_address_sets_up)
 
 

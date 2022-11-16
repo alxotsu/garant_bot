@@ -22,6 +22,7 @@ def register_bot_callback_handler(data: str):
 
 @register_bot_callback_handler("output")
 def callback_handler(call):
+    # TODO cac
     chat_id = call.message.chat.id
     message_id = call.message.message_id
     user = queries.get_user(chat_id)
