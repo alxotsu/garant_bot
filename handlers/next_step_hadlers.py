@@ -292,6 +292,10 @@ def input_referral(message):
         bot.send_message(message.chat.id, text=strings.referral_yourself_error)
         return
 
+    if referral.referral_id == message.chat.id:
+        bot.send_message(message.chat.id, text=strings.cannot_invite_referral)
+        return
+
     user.referral_id = referral.chat_id
     user.save()
 

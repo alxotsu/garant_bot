@@ -318,6 +318,7 @@ class en:
     )
     referral_not_found_error = "⛔️ No user with such referral code was found."
     referral_yourself_error = "⛔️ You can't invite yourself."
+    cannot_invite_referral = "⛔️ You can't invite this user."
     referral_success = "The referral program is enabled."
     new_referral = (
         "A new user has entered your promo code.\n"
