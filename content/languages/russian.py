@@ -42,10 +42,11 @@ class ru:
     )
     about_us = "⭐️ О нас"
     about = (
-        "По всем вопросам: @{admin}\n"
-        "Почта: {email}\n"
-        "Наш чат: {chat}\n"
-        "Инструкция по использованию: {instruction}"
+        "Инструкция: https://rift-ghost-18a.notion.site/166d554f1b4346fb9abce2257ca9e980\n"
+        "Сайт: www.garantify.org/ru\n"
+        "Часто задаваемые вопросы: https://rift-ghost-18a.notion.site/Garantify-80d10de05a804f059742408782fd155a\n"
+        "Админ: @garantify_admin\n"
+        "Наш чат: https://t.me/garantify_otc"
     )
     show_offers = "💵 Прошедшие сделки"
     show_offers_where_you_are = "Вывести ваши последние сделки где вы..."

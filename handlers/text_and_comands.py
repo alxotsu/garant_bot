@@ -100,12 +100,7 @@ def send_text(message):
         elif message.text == strings.about_us:
             bot.send_message(
                 chat_id,
-                strings.about.format(
-                    admin=config.ADMIN_USERNAME,
-                    chat=config.BOT_CHAT_LINK,
-                    instruction=config.INSTRUCTION_LINK,
-                    email=config.ADMIN_EMAIL,
-                ),
+                strings.about,
             )
 
         elif message.text == strings.show_offers:

@@ -38,10 +38,11 @@ class en:
     )
     about_us = "⭐️ About us"
     about = (
-        "For all questions: @{admin}\n"
-        "Email: {email}\n"
-        "Our chat: {chat}\n"
-        "Instructions for use: {instruction}"
+        "How to use: https://rift-ghost-18a.notion.site/How-to-use-2a8cc6363a254f3f9fdafcd24c850d40\n"
+        "Website: www.garantify.org/en\n"
+        "F. A. Q: https://rift-ghost-18a.notion.site/Garantify-FAQ-b1cb9f08ff534ee89fe2dc28a3e09ba6\n"
+        "Admin: @garantify_admin\n"
+        "Our chat: https://t.me/garantify_otc"
     )
     show_offers = "💵 Deals"
     show_offers_where_you_are = "Show your latest deals where are you..."
