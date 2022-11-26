@@ -22,7 +22,6 @@ def register_bot_callback_handler(data: str):
 
 @register_bot_callback_handler("output")
 def callback_handler(call):
-    # TODO cac
     chat_id = call.message.chat.id
     message_id = call.message.message_id
     user = queries.get_user(chat_id)
@@ -257,17 +256,18 @@ def callback_handler(call):
 @register_bot_callback_handler("cancel_deal")
 def callback_handler(call):
     chat_id = call.message.chat.id
-    message_id = call.message.message_id
     user = queries.get_user(chat_id)
     strings = get_strings(user.language)
     deal = user.seller_deal or user.customer_deal
 
     if deal.status != Deal.Status.new:
-        bot.send_message(chat_id, text=strings.cannot_cancel_deal)
+        bot.send_message(chat_id, text=strings.cannot_cancel_deal,
+        reply_markup=keyboards.menu(strings))
         return
 
-    bot.edit_message_text(
-        chat_id=chat_id, message_id=message_id, text=strings.cancel_deal
+    bot.send_message(
+        chat_id=chat_id, text=strings.cancel_deal,
+        reply_markup=keyboards.menu(strings)
     )
     deal.delete()
 
@@ -275,7 +275,6 @@ def callback_handler(call):
 @register_bot_callback_handler("refuse_deal")
 def callback_handler(call):
     chat_id = call.message.chat.id
-    message_id = call.message.message_id
     user = queries.get_user(chat_id)
     strings = get_strings(user.language)
     deal = user.seller_deal or user.customer_deal
@@ -289,11 +288,11 @@ def callback_handler(call):
         bot.send_message(chat_id, text=strings.cannot_cancel_deal)
         return
 
-    bot.edit_message_text(
-        chat_id=chat_id, message_id=message_id, text=strings.cancel_deal
+    bot.send_message(
+        chat_id=chat_id, text=strings.cancel_deal, reply_markup=keyboards.menu(strings)
     )
     strings = get_strings(second_user.language)
-    bot.send_message(chat_id=second_user.chat_id, text=strings.cancel_deal)
+    bot.send_message(chat_id=second_user.chat_id, text=strings.cancel_deal, reply_markup=keyboards.menu(strings))
     deal.delete()
 
 
@@ -665,7 +664,7 @@ def callback_handler(call):
     strings = get_strings(deal.customer.language)
     bot.send_message(deal.customer_id, text=strings.refuse_cancel_deal)
 
-    strings = get_strings(deal.customer.seller)
+    strings = get_strings(deal.seller.language)
     bot.send_message(deal.seller_id, text=strings.refuse_cancel_deal)
 
 

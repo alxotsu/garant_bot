@@ -14,6 +14,7 @@ class en:
     yes = "Yes"
     no = "No"
     disable_keyboard = "Keyboard disable..."
+    enable_keyboard = "Keyboard enabled."
     have_deal_now = "⛔️ You cannot interact with the bot until you complete the deal."
     require_username = "⛔️ You need to set a Username to work with the bot."
     unknown_error = (
