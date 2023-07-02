@@ -1,4 +1,5 @@
 from app.bot import bot
+import mathlab
 import handlers  # Setting up handlers here (DO NOT REMOVE!)
 
 me = bot.get_me()
